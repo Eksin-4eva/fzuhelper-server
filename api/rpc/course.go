@@ -121,3 +121,51 @@ func UpdateAutoAdjustCourseRPC(ctx context.Context, req *course.UpdateAdjustCour
 	}
 	return nil
 }
+
+func UploadCustomCourseRPC(ctx context.Context, req *course.UploadCustomCourseRequest) (int64, error) {
+	resp, err := courseClient.UploadCustomCourse(ctx, req)
+	if err != nil {
+		logger.WithCtx(ctx).Errorf("UploadCustomCourseRPC: RPC called failed: %v", err.Error())
+		return 0, errno.InternalServiceError.WithMessage(err.Error())
+	}
+	if err = utils.HandleBaseRespWithCookie(resp.Base); err != nil {
+		return 0, errno.BizError.WithMessage("上传自定义课程失败: " + resp.Base.Msg)
+	}
+	return resp.ServerVersion, nil
+}
+
+func GetCustomCourseListRPC(ctx context.Context, req *course.GetCustomCourseListRequest) (*course.GetCustomCourseListResponse, error) {
+	resp, err := courseClient.GetCustomCourseList(ctx, req)
+	if err != nil {
+		logger.WithCtx(ctx).Errorf("GetCustomCourseListRPC: RPC called failed: %v", err.Error())
+		return nil, errno.InternalServiceError.WithMessage(err.Error())
+	}
+	if err = utils.HandleBaseRespWithCookie(resp.Base); err != nil {
+		return nil, errno.BizError.WithMessage("获取自定义课程失败: " + resp.Base.Msg)
+	}
+	return resp, nil
+}
+
+func SyncCustomCourseRPC(ctx context.Context, req *course.SyncCustomCourseRequest) (*course.SyncCustomCourseResponse, error) {
+	resp, err := courseClient.SyncCustomCourse(ctx, req)
+	if err != nil {
+		logger.WithCtx(ctx).Errorf("SyncCustomCourseRPC: RPC called failed: %v", err.Error())
+		return nil, errno.InternalServiceError.WithMessage(err.Error())
+	}
+	if err = utils.HandleBaseRespWithCookie(resp.Base); err != nil {
+		return nil, errno.BizError.WithMessage("同步自定义课程失败: " + resp.Base.Msg)
+	}
+	return resp, nil
+}
+
+func DeleteCustomCourseRPC(ctx context.Context, req *course.DeleteCustomCourseRequest) error {
+	resp, err := courseClient.DeleteCustomCourse(ctx, req)
+	if err != nil {
+		logger.WithCtx(ctx).Errorf("DeleteCustomCourseRPC: RPC called failed: %v", err.Error())
+		return errno.InternalServiceError.WithMessage(err.Error())
+	}
+	if err = utils.HandleBaseRespWithCookie(resp.Base); err != nil {
+		return errno.BizError.WithMessage("删除自定义课程失败: " + resp.Base.Msg)
+	}
+	return nil
+}

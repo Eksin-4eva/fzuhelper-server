@@ -313,4 +313,41 @@ struct FeedbackListItem {
     6: required string app_version,
 }
 
+struct CustomCourse {
+    1: required string id                    // 课程ID（storageKey）
+    2: required string name                  // 课程名称
+    3: optional string teacher               // 教师
+    4: optional string location              // 上课地点
+    5: optional string color                 // 课程颜色
+    6: optional string note                  // 备注
+    7: required list<CourseScheduleRule> scheduleRules  // 排课规则
+    8: required string semester              // 学期
+    9: required string lastUpdateTime        // 最后更新时间
+    10: required string storageKey           // 存储key
+}
+
+struct SyncCustomCourseRequestData {
+    1: required string id
+    2: required string name
+    3: optional string teacher
+    4: optional string location
+    5: optional string color
+    6: optional string note
+    7: required list<CourseScheduleRule> scheduleRules
+    8: required string lastUpdateTime
+}
+
+struct SyncCustomCourseResponseData {
+    1: required string id
+    2: required string name
+    3: optional string teacher
+    4: optional string location
+    5: optional string color
+    6: optional string note
+    7: required list<CourseScheduleRule> scheduleRules
+    8: required string semester
+    9: required string lastUpdateTime
+    10: required string storageKey
+}
+
 // ====== END OA ======

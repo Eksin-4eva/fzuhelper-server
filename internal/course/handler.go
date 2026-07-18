@@ -174,3 +174,78 @@ func (s *CourseServiceImpl) UpdateAdjustCourse(ctx context.Context, req *course.
 	resp.Base = base.BuildSuccessResp()
 	return resp, nil
 }
+
+func (s *CourseServiceImpl) UploadCustomCourse(ctx context.Context, req *course.UploadCustomCourseRequest) (
+	resp *course.UploadCustomCourseResponse, err error,
+) {
+	resp = new(course.UploadCustomCourseResponse)
+	loginData, err := metainfoContext.GetLoginData(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("Course.UploadCustomCourse: Get login data fail %w", err)
+	}
+	serverVersion, err := service.NewCourseService(ctx, s.ClientSet, s.taskQueue).UploadCustomCourse(req, loginData)
+	if err != nil {
+		resp.Base = base.BuildBaseResp(err)
+		return resp, nil
+	}
+	resp.Base = base.BuildSuccessResp()
+	resp.ServerVersion = serverVersion
+	return resp, nil
+}
+
+func (s *CourseServiceImpl) GetCustomCourseList(ctx context.Context, req *course.GetCustomCourseListRequest) (
+	resp *course.GetCustomCourseListResponse, err error,
+) {
+	resp = new(course.GetCustomCourseListResponse)
+	loginData, err := metainfoContext.GetLoginData(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("Course.GetCustomCourseList: Get login data fail %w", err)
+	}
+	res, err := service.NewCourseService(ctx, s.ClientSet, s.taskQueue).GetCustomCourseList(req, loginData)
+	if err != nil {
+		resp.Base = base.BuildBaseResp(err)
+		return resp, nil
+	}
+	resp.Base = base.BuildSuccessResp()
+	resp.ServerVersion = res.ServerVersion
+	resp.Data = res.Data
+	return resp, nil
+}
+
+func (s *CourseServiceImpl) SyncCustomCourse(ctx context.Context, req *course.SyncCustomCourseRequest) (
+	resp *course.SyncCustomCourseResponse, err error,
+) {
+	resp = new(course.SyncCustomCourseResponse)
+	loginData, err := metainfoContext.GetLoginData(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("Course.SyncCustomCourse: Get login data fail %w", err)
+	}
+	res, err := service.NewCourseService(ctx, s.ClientSet, s.taskQueue).SyncCustomCourse(req, loginData)
+	if err != nil {
+		resp.Base = base.BuildBaseResp(err)
+		return resp, nil
+	}
+	resp.Base = base.BuildSuccessResp()
+	resp.ServerVersion = res.ServerVersion
+	resp.NewCourses_ = res.NewCourses_
+	resp.UpdatedCourses = res.UpdatedCourses
+	resp.DeletedCourseIds = res.DeletedCourseIds
+	return resp, nil
+}
+
+func (s *CourseServiceImpl) DeleteCustomCourse(ctx context.Context, req *course.DeleteCustomCourseRequest) (
+	resp *course.DeleteCustomCourseResponse, err error,
+) {
+	resp = new(course.DeleteCustomCourseResponse)
+	loginData, err := metainfoContext.GetLoginData(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("Course.DeleteCustomCourse: Get login data fail %w", err)
+	}
+	err = service.NewCourseService(ctx, s.ClientSet, s.taskQueue).DeleteCustomCourse(req, loginData)
+	if err != nil {
+		resp.Base = base.BuildBaseResp(err)
+		return resp, nil
+	}
+	resp.Base = base.BuildSuccessResp()
+	return resp, nil
+}

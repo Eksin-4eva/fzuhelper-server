@@ -57,3 +57,29 @@ type AutoAdjustCourse struct {
 	UpdatedAt   time.Time
 	DeletedAt   gorm.DeletedAt `sql:"index"`
 }
+
+type CustomCourse struct {
+	Id             int64
+	StuId          string
+	Semester       string
+	StorageKey     string `gorm:"uniqueIndex"`
+	Name           string
+	Teacher        string
+	Location       string
+	Color          string
+	Note           string
+	ScheduleRules  string
+	LastUpdateTime string
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	DeletedAt      gorm.DeletedAt `sql:"index"`
+}
+
+type CourseSyncVersion struct {
+	StuId      string `gorm:"primaryKey"`
+	Semester   string `gorm:"primaryKey"`
+	Version    int64
+	LastSyncAt time.Time
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}

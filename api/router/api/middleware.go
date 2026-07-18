@@ -593,3 +593,33 @@ func _getautoadjustcourselistMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
+
+func _customMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _deletecustomcourseMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _getcustomcourselistMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _synccustomcourseMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _uploadcustomcourseMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _configMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}

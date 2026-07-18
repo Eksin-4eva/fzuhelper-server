@@ -29,6 +29,7 @@ import (
 	"github.com/west2-online/fzuhelper-server/api/pack"
 	"github.com/west2-online/fzuhelper-server/api/rpc"
 	"github.com/west2-online/fzuhelper-server/kitex_gen/course"
+	"github.com/west2-online/fzuhelper-server/kitex_gen/model"
 	metainfoContext "github.com/west2-online/fzuhelper-server/pkg/base/context"
 	"github.com/west2-online/fzuhelper-server/pkg/constants"
 	"github.com/west2-online/fzuhelper-server/pkg/errno"
@@ -192,6 +193,201 @@ func UpdateAdjustCourse(ctx context.Context, c *app.RequestContext) {
 		Enabled:  req.Enabled,
 		FromDate: req.FromDate,
 		ToDate:   req.ToDate,
+	})
+	if err != nil {
+		pack.RespError(c, err)
+		return
+	}
+
+	pack.RespSuccess(c)
+}
+
+// UploadCustomCourse .
+// @router /api/v1/jwch/course/custom/upload [POST]
+func UploadCustomCourse(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req api.UploadCustomCourseRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		pack.RespError(c, errno.ParamError.WithError(err))
+		return
+	}
+
+	var courses []*model.SyncCustomCourseRequestData
+	for _, courseData := range req.Courses {
+		var scheduleRules []*model.CourseScheduleRule
+		for _, rule := range courseData.ScheduleRules {
+			scheduleRules = append(scheduleRules, &model.CourseScheduleRule{
+				Location:   rule.Location,
+				StartClass: rule.StartClass,
+				EndClass:   rule.EndClass,
+				StartWeek:  rule.StartWeek,
+				EndWeek:    rule.EndWeek,
+				Weekday:    rule.Weekday,
+				Single:     rule.Single,
+				Double:     rule.Double,
+				Adjust:     rule.Adjust,
+			})
+		}
+		courses = append(courses, &model.SyncCustomCourseRequestData{
+			Id:             courseData.ID,
+			Name:           courseData.Name,
+			Teacher:        courseData.Teacher,
+			Location:       courseData.Location,
+			Color:          courseData.Color,
+			Note:           courseData.Note,
+			ScheduleRules:  scheduleRules,
+			LastUpdateTime: courseData.LastUpdateTime,
+		})
+	}
+
+	serverVersion, err := rpc.UploadCustomCourseRPC(ctx, &course.UploadCustomCourseRequest{
+		Semester: req.Semester,
+		Courses:  courses,
+	})
+	if err != nil {
+		pack.RespError(c, err)
+		return
+	}
+
+	resp := new(api.UploadCustomCourseResponse)
+	resp.Base = pack.BuildBaseResp(nil)
+	resp.ServerVersion = serverVersion
+	c.JSON(consts.StatusOK, resp)
+}
+
+// GetCustomCourseList .
+// @router /api/v1/jwch/course/custom/list [GET]
+func GetCustomCourseList(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req api.GetCustomCourseListRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		pack.RespError(c, errno.ParamError.WithError(err))
+		return
+	}
+
+	res, err := rpc.GetCustomCourseListRPC(ctx, &course.GetCustomCourseListRequest{
+		Semester: req.Semester,
+	})
+	if err != nil {
+		pack.RespError(c, err)
+		return
+	}
+
+	resp := new(api.GetCustomCourseListResponse)
+	resp.Base = pack.BuildBaseResp(nil)
+	resp.ServerVersion = res.ServerVersion
+	resp.Data = pack.BuildCustomCourseList(res.Data)
+	c.JSON(consts.StatusOK, resp)
+}
+
+// SyncCustomCourse .
+// @router /api/v1/jwch/course/custom/sync [POST]
+func SyncCustomCourse(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req api.SyncCustomCourseRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		pack.RespError(c, errno.ParamError.WithError(err))
+		return
+	}
+
+	var addedCourses []*model.SyncCustomCourseRequestData
+	if req.AddedCourses != nil {
+		for _, courseData := range req.AddedCourses {
+			var scheduleRules []*model.CourseScheduleRule
+			for _, rule := range courseData.ScheduleRules {
+				scheduleRules = append(scheduleRules, &model.CourseScheduleRule{
+					Location:   rule.Location,
+					StartClass: rule.StartClass,
+					EndClass:   rule.EndClass,
+					StartWeek:  rule.StartWeek,
+					EndWeek:    rule.EndWeek,
+					Weekday:    rule.Weekday,
+					Single:     rule.Single,
+					Double:     rule.Double,
+					Adjust:     rule.Adjust,
+				})
+			}
+			addedCourses = append(addedCourses, &model.SyncCustomCourseRequestData{
+				Id:             courseData.ID,
+				Name:           courseData.Name,
+				Teacher:        courseData.Teacher,
+				Location:       courseData.Location,
+				Color:          courseData.Color,
+				Note:           courseData.Note,
+				ScheduleRules:  scheduleRules,
+				LastUpdateTime: courseData.LastUpdateTime,
+			})
+		}
+	}
+
+	var updatedCourses []*model.SyncCustomCourseRequestData
+	if req.UpdatedCourses != nil {
+		for _, courseData := range req.UpdatedCourses {
+			var scheduleRules []*model.CourseScheduleRule
+			for _, rule := range courseData.ScheduleRules {
+				scheduleRules = append(scheduleRules, &model.CourseScheduleRule{
+					Location:   rule.Location,
+					StartClass: rule.StartClass,
+					EndClass:   rule.EndClass,
+					StartWeek:  rule.StartWeek,
+					EndWeek:    rule.EndWeek,
+					Weekday:    rule.Weekday,
+					Single:     rule.Single,
+					Double:     rule.Double,
+					Adjust:     rule.Adjust,
+				})
+			}
+			updatedCourses = append(updatedCourses, &model.SyncCustomCourseRequestData{
+				Id:             courseData.ID,
+				Name:           courseData.Name,
+				Teacher:        courseData.Teacher,
+				Location:       courseData.Location,
+				Color:          courseData.Color,
+				Note:           courseData.Note,
+				ScheduleRules:  scheduleRules,
+				LastUpdateTime: courseData.LastUpdateTime,
+			})
+		}
+	}
+
+	res, err := rpc.SyncCustomCourseRPC(ctx, &course.SyncCustomCourseRequest{
+		Semester:         req.Semester,
+		ClientVersion:    req.ClientVersion,
+		AddedCourses:     addedCourses,
+		UpdatedCourses:   updatedCourses,
+		DeletedCourseIds: req.DeletedCourseIds,
+	})
+	if err != nil {
+		pack.RespError(c, err)
+		return
+	}
+
+	resp := new(api.SyncCustomCourseResponse)
+	resp.Base = pack.BuildBaseResp(nil)
+	resp.ServerVersion = res.ServerVersion
+	resp.NewCourses = pack.BuildSyncCustomCourseResponseDataList(res.NewCourses_)
+	resp.UpdatedCourses = pack.BuildSyncCustomCourseResponseDataList(res.UpdatedCourses)
+	resp.DeletedCourseIds = res.DeletedCourseIds
+	c.JSON(consts.StatusOK, resp)
+}
+
+// DeleteCustomCourse .
+// @router /api/v1/jwch/course/custom/delete [POST]
+func DeleteCustomCourse(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req api.DeleteCustomCourseRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		pack.RespError(c, errno.ParamError.WithError(err))
+		return
+	}
+
+	err = rpc.DeleteCustomCourseRPC(ctx, &course.DeleteCustomCourseRequest{
+		Semester:  req.Semester,
+		CourseIds: req.CourseIds,
 	})
 	if err != nil {
 		pack.RespError(c, err)

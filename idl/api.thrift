@@ -244,6 +244,51 @@ struct UpdateAdjustCourseResponse {
     1: required model.BaseResp base
 }
 
+struct UploadCustomCourseRequest {
+    1: required string semester
+    2: required list<model.SyncCustomCourseRequestData> courses
+}
+
+struct UploadCustomCourseResponse {
+    1: required model.BaseResp base
+    2: required i64 server_version
+}
+
+struct GetCustomCourseListRequest {
+    1: required string semester
+}
+
+struct GetCustomCourseListResponse {
+    1: required model.BaseResp base
+    2: required i64 server_version
+    3: required list<model.CustomCourse> data
+}
+
+struct SyncCustomCourseRequest {
+    1: required string semester
+    2: required i64 client_version
+    3: optional list<model.SyncCustomCourseRequestData> added_courses
+    4: optional list<model.SyncCustomCourseRequestData> updated_courses
+    5: optional list<string> deleted_course_ids
+}
+
+struct SyncCustomCourseResponse {
+    1: required model.BaseResp base
+    2: required i64 server_version
+    3: optional list<model.SyncCustomCourseResponseData> new_courses
+    4: optional list<model.SyncCustomCourseResponseData> updated_courses
+    5: optional list<string> deleted_course_ids
+}
+
+struct DeleteCustomCourseRequest {
+    1: required string semester
+    2: required list<string> course_ids
+}
+
+struct DeleteCustomCourseResponse {
+    1: required model.BaseResp base
+}
+
 service CourseService {
     // 获取课表
     CourseListResponse GetCourseList(1: CourseListRequest req)(api.get="/api/v1/jwch/course/list")
@@ -262,6 +307,14 @@ service CourseService {
     GetAutoAdjustCourseListResponse GetAutoAdjustCourseList(1: GetAutoAdjustCourseListRequest req)(api.get="/api/v1/course/adjust/list")
     // 更新自动调课信息
     UpdateAdjustCourseResponse UpdateAdjustCourse(1: UpdateAdjustCourseRequest req)(api.put="/api/v1/course/adjust/")
+    // 上传自定义课程列表
+    UploadCustomCourseResponse UploadCustomCourse(1: UploadCustomCourseRequest req)(api.post="/api/v1/jwch/course/custom/upload")
+    // 获取自定义课程列表
+    GetCustomCourseListResponse GetCustomCourseList(1: GetCustomCourseListRequest req)(api.get="/api/v1/jwch/course/custom/list")
+    // 同步自定义课程（增量同步）
+    SyncCustomCourseResponse SyncCustomCourse(1: SyncCustomCourseRequest req)(api.post="/api/v1/jwch/course/custom/sync")
+    // 删除自定义课程
+    DeleteCustomCourseResponse DeleteCustomCourse(1: DeleteCustomCourseRequest req)(api.post="/api/v1/jwch/course/custom/delete")
 }
 
 ## ----------------------------------------------------------------------------

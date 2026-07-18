@@ -117,3 +117,48 @@ func BuildAdjustCourseList(res []*model.AdjustCourse) []*courseModel.AdjustCours
 	}
 	return list
 }
+
+func BuildCustomCourse(res *model.CustomCourse) *courseModel.CustomCourse {
+	return &courseModel.CustomCourse{
+		ID:             res.Id,
+		Name:           res.Name,
+		Teacher:        res.Teacher,
+		Location:       res.Location,
+		Color:          res.Color,
+		Note:           res.Note,
+		ScheduleRules:  BuildCourseScheduleRuleList(res.ScheduleRules),
+		LastUpdateTime: res.LastUpdateTime,
+		StorageKey:     res.StorageKey,
+		Semester:       res.Semester,
+	}
+}
+
+func BuildCustomCourseList(res []*model.CustomCourse) []*courseModel.CustomCourse {
+	list := make([]*courseModel.CustomCourse, 0, len(res))
+	for _, v := range res {
+		list = append(list, BuildCustomCourse(v))
+	}
+	return list
+}
+
+func BuildSyncCustomCourseResponseData(res *model.SyncCustomCourseResponseData) *courseModel.SyncCustomCourseResponseData {
+	return &courseModel.SyncCustomCourseResponseData{
+		ID:             res.Id,
+		Name:           res.Name,
+		Teacher:        res.Teacher,
+		Location:       res.Location,
+		Color:          res.Color,
+		Note:           res.Note,
+		ScheduleRules:  BuildCourseScheduleRuleList(res.ScheduleRules),
+		LastUpdateTime: res.LastUpdateTime,
+		StorageKey:     res.StorageKey,
+	}
+}
+
+func BuildSyncCustomCourseResponseDataList(res []*model.SyncCustomCourseResponseData) []*courseModel.SyncCustomCourseResponseData {
+	list := make([]*courseModel.SyncCustomCourseResponseData, 0, len(res))
+	for _, v := range res {
+		list = append(list, BuildSyncCustomCourseResponseData(v))
+	}
+	return list
+}

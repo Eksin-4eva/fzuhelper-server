@@ -41,6 +41,8 @@ const (
 	FriendConfigTableName        = "friend_config"
 	CourseTeacherScoresTableName = "course_teacher_scores"
 	AutoAdjustCourseTableName    = "auto_adjust_course"
+	CustomCourseTableName        = "custom_course"
+	CourseSyncVersionTableName   = "course_sync_version"
 )
 
 // Biz
