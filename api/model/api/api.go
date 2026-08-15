@@ -835,6 +835,132 @@ func (p *ReorderFriendListResponse) String() string {
 // # ----------------------------------------------------------------------------
 // # course 课表
 // # ----------------------------------------------------------------------------
+// 自定义课程项
+type CustomCourseItem struct {
+	Id         *string `thrift:"id,1,optional" form:"id" json:"id,omitempty" query:"id"`
+	Name       string  `thrift:"name,2,required" form:"name,required" json:"name,required" query:"name,required"`
+	Teacher    *string `thrift:"teacher,3,optional" form:"teacher" json:"teacher,omitempty" query:"teacher"`
+	Location   string  `thrift:"location,4,required" form:"location,required" json:"location,required" query:"location,required"`
+	StartClass int32   `thrift:"start_class,5,required" form:"start_class,required" json:"start_class,required" query:"start_class,required"`
+	EndClass   int32   `thrift:"end_class,6,required" form:"end_class,required" json:"end_class,required" query:"end_class,required"`
+	StartWeek  int32   `thrift:"start_week,7,required" form:"start_week,required" json:"start_week,required" query:"start_week,required"`
+	EndWeek    int32   `thrift:"end_week,8,required" form:"end_week,required" json:"end_week,required" query:"end_week,required"`
+	Weekday    int32   `thrift:"weekday,9,required" form:"weekday,required" json:"weekday,required" query:"weekday,required"`
+	Single     *bool   `thrift:"single,10,optional" form:"single" json:"single,omitempty" query:"single"`
+	Double_    *bool   `thrift:"double_,11,optional" form:"double_" json:"double_,omitempty" query:"double_"`
+	Color      *string `thrift:"color,12,optional" form:"color" json:"color,omitempty" query:"color"`
+	Remark     *string `thrift:"remark,13,optional" form:"remark" json:"remark,omitempty" query:"remark"`
+}
+
+func NewCustomCourseItem() *CustomCourseItem {
+	return &CustomCourseItem{}
+}
+
+func (p *CustomCourseItem) InitDefault() {
+}
+
+var CustomCourseItem_Id_DEFAULT string
+
+func (p *CustomCourseItem) GetId() (v string) {
+	if !p.IsSetId() {
+		return CustomCourseItem_Id_DEFAULT
+	}
+	return *p.Id
+}
+func (p *CustomCourseItem) IsSetId() bool {
+	return p.Id != nil
+}
+
+func (p *CustomCourseItem) GetName() (v string) {
+	return p.Name
+}
+
+var CustomCourseItem_Teacher_DEFAULT string
+
+func (p *CustomCourseItem) GetTeacher() (v string) {
+	if !p.IsSetTeacher() {
+		return CustomCourseItem_Teacher_DEFAULT
+	}
+	return *p.Teacher
+}
+func (p *CustomCourseItem) IsSetTeacher() bool {
+	return p.Teacher != nil
+}
+
+func (p *CustomCourseItem) GetLocation() (v string) {
+	return p.Location
+}
+func (p *CustomCourseItem) GetStartClass() (v int32) {
+	return p.StartClass
+}
+func (p *CustomCourseItem) GetEndClass() (v int32) {
+	return p.EndClass
+}
+func (p *CustomCourseItem) GetStartWeek() (v int32) {
+	return p.StartWeek
+}
+func (p *CustomCourseItem) GetEndWeek() (v int32) {
+	return p.EndWeek
+}
+func (p *CustomCourseItem) GetWeekday() (v int32) {
+	return p.Weekday
+}
+
+var CustomCourseItem_Single_DEFAULT bool
+
+func (p *CustomCourseItem) GetSingle() (v bool) {
+	if !p.IsSetSingle() {
+		return CustomCourseItem_Single_DEFAULT
+	}
+	return *p.Single
+}
+func (p *CustomCourseItem) IsSetSingle() bool {
+	return p.Single != nil
+}
+
+var CustomCourseItem_Double_DEFAULT bool
+
+func (p *CustomCourseItem) GetDouble_() (v bool) {
+	if !p.IsSetDouble_() {
+		return CustomCourseItem_Double_DEFAULT
+	}
+	return *p.Double_
+}
+func (p *CustomCourseItem) IsSetDouble_() bool {
+	return p.Double_ != nil
+}
+
+var CustomCourseItem_Color_DEFAULT string
+
+func (p *CustomCourseItem) GetColor() (v string) {
+	if !p.IsSetColor() {
+		return CustomCourseItem_Color_DEFAULT
+	}
+	return *p.Color
+}
+func (p *CustomCourseItem) IsSetColor() bool {
+	return p.Color != nil
+}
+
+var CustomCourseItem_Remark_DEFAULT string
+
+func (p *CustomCourseItem) GetRemark() (v string) {
+	if !p.IsSetRemark() {
+		return CustomCourseItem_Remark_DEFAULT
+	}
+	return *p.Remark
+}
+func (p *CustomCourseItem) IsSetRemark() bool {
+	return p.Remark != nil
+}
+
+func (p *CustomCourseItem) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("CustomCourseItem(%+v)", *p)
+}
+
 type CourseListRequest struct {
 	Term      string `thrift:"term,1,required" form:"term,required" json:"term,required" query:"term,required"`
 	IsRefresh *bool  `thrift:"is_refresh,2,optional" form:"is_refresh" json:"is_refresh,omitempty" query:"is_refresh"`
@@ -872,8 +998,9 @@ func (p *CourseListRequest) String() string {
 }
 
 type CourseListResponse struct {
-	Base *model.BaseResp `thrift:"base,1,required" form:"base,required" json:"base,required" query:"base,required"`
-	Data []*model.Course `thrift:"data,2,required,list<model.Course>" form:"data,required" json:"data,required" query:"data,required"`
+	Base          *model.BaseResp     `thrift:"base,1,required" form:"base,required" json:"base,required" query:"base,required"`
+	Data          []*model.Course     `thrift:"data,2,required,list<model.Course>" form:"data,required" json:"data,required" query:"data,required"`
+	CustomCourses []*CustomCourseItem `thrift:"custom_courses,3,optional,list<CustomCourseItem>" form:"custom_courses" json:"custom_courses,omitempty" query:"custom_courses"`
 }
 
 func NewCourseListResponse() *CourseListResponse {
@@ -894,6 +1021,18 @@ func (p *CourseListResponse) GetBase() (v *model.BaseResp) {
 
 func (p *CourseListResponse) GetData() (v []*model.Course) {
 	return p.Data
+}
+
+var CourseListResponse_CustomCourses_DEFAULT []*CustomCourseItem
+
+func (p *CourseListResponse) GetCustomCourses() (v []*CustomCourseItem) {
+	if !p.IsSetCustomCourses() {
+		return CourseListResponse_CustomCourses_DEFAULT
+	}
+	return p.CustomCourses
+}
+func (p *CourseListResponse) IsSetCustomCourses() bool {
+	return p.CustomCourses != nil
 }
 
 func (p *CourseListResponse) IsSetBase() bool {

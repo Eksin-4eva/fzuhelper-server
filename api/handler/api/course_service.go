@@ -57,8 +57,10 @@ func GetCourseList(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp := new(api.CourseListResponse)
-	resp.Data = pack.BuildCourseList(res)
-	pack.RespList(c, resp.Data)
+	resp.Base = pack.BuildSuccessBase()
+	resp.Data = pack.BuildCourseList(res.Data)
+	resp.CustomCourses = pack.BuildCustomCourseItemList(res.CustomCourses)
+	pack.RespData(c, resp)
 }
 
 // GetTermList .
@@ -199,4 +201,59 @@ func UpdateAdjustCourse(ctx context.Context, c *app.RequestContext) {
 	}
 
 	pack.RespSuccess(c)
+}
+
+// UpsertCustomCourse 新增或更新自定义课程
+// @router /api/v1/course/custom [POST]
+func UpsertCustomCourse(ctx context.Context, c *app.RequestContext) {
+	var req api.UpsertCustomCourseRequest
+	var err error
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		pack.RespError(c, errno.ParamError.WithError(err))
+		return
+	}
+	if req.Course == nil {
+		pack.RespError(c, errno.ParamError)
+		return
+	}
+
+	res, err := rpc.UpsertCustomCourseRPC(ctx, &course.UpsertCustomCourseRequest{
+		Term:   req.Term,
+		Course: pack.BuildCustomCourseItemForRPC(req.Course),
+	})
+	if err != nil {
+		pack.RespError(c, err)
+		return
+	}
+
+	resp := new(api.UpsertCustomCourseResponse)
+	resp.Base = pack.BuildSuccessBase()
+	resp.CourseId = res.CourseId
+	pack.RespData(c, resp)
+}
+
+// DeleteCustomCourse 删除自定义课程
+// @router /api/v1/course/custom [DELETE]
+func DeleteCustomCourse(ctx context.Context, c *app.RequestContext) {
+	var req api.DeleteCustomCourseRequest
+	var err error
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		pack.RespError(c, errno.ParamError.WithError(err))
+		return
+	}
+
+	err = rpc.DeleteCustomCourseRPC(ctx, &course.DeleteCustomCourseRequest{
+		Term:     req.Term,
+		CourseId: req.CourseId,
+	})
+	if err != nil {
+		pack.RespError(c, err)
+		return
+	}
+
+	resp := new(api.DeleteCustomCourseResponse)
+	resp.Base = pack.BuildSuccessBase()
+	pack.RespData(c, resp)
 }

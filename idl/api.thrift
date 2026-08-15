@@ -175,6 +175,23 @@ service UserService {
 ## ----------------------------------------------------------------------------
 ## course 课表
 ## ----------------------------------------------------------------------------
+// 自定义课程项
+struct CustomCourseItem {
+    1: optional string id
+    2: required string name
+    3: optional string teacher
+    4: required string location
+    5: required i32 start_class
+    6: required i32 end_class
+    7: required i32 start_week
+    8: required i32 end_week
+    9: required i32 weekday
+    10: optional bool single
+    11: optional bool double_
+    12: optional string color
+    13: optional string remark
+}
+
 struct CourseListRequest {
     1: required string term
     2: optional bool is_refresh
@@ -183,6 +200,7 @@ struct CourseListRequest {
 struct CourseListResponse {
     1: required model.BaseResp base
     2: required list<model.Course> data
+    3: optional list<CustomCourseItem> custom_courses
 }
 
 struct CourseTermListRequest{}
@@ -244,6 +262,27 @@ struct UpdateAdjustCourseResponse {
     1: required model.BaseResp base
 }
 
+// 新增或更新自定义课程
+struct UpsertCustomCourseRequest {
+    1: required string term
+    2: required CustomCourseItem course
+}
+
+struct UpsertCustomCourseResponse {
+    1: required model.BaseResp base
+    2: optional string course_id
+}
+
+// 删除自定义课程
+struct DeleteCustomCourseRequest {
+    1: required string term
+    2: required string course_id
+}
+
+struct DeleteCustomCourseResponse {
+    1: required model.BaseResp base
+}
+
 service CourseService {
     // 获取课表
     CourseListResponse GetCourseList(1: CourseListRequest req)(api.get="/api/v1/jwch/course/list")
@@ -262,6 +301,10 @@ service CourseService {
     GetAutoAdjustCourseListResponse GetAutoAdjustCourseList(1: GetAutoAdjustCourseListRequest req)(api.get="/api/v1/course/adjust/list")
     // 更新自动调课信息
     UpdateAdjustCourseResponse UpdateAdjustCourse(1: UpdateAdjustCourseRequest req)(api.put="/api/v1/course/adjust/")
+    // 新增或更新自定义课程
+    UpsertCustomCourseResponse UpsertCustomCourse(1: UpsertCustomCourseRequest req)(api.post="/api/v1/course/custom")
+    // 删除自定义课程
+    DeleteCustomCourseResponse DeleteCustomCourse(1: DeleteCustomCourseRequest req)(api.delete="/api/v1/course/custom")
 }
 
 ## ----------------------------------------------------------------------------

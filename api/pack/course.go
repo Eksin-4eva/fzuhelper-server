@@ -17,7 +17,9 @@ limitations under the License.
 package pack
 
 import (
+	api "github.com/west2-online/fzuhelper-server/api/model/api"
 	courseModel "github.com/west2-online/fzuhelper-server/api/model/model"
+	courseKitex "github.com/west2-online/fzuhelper-server/kitex_gen/course"
 	"github.com/west2-online/fzuhelper-server/kitex_gen/model"
 )
 
@@ -116,4 +118,59 @@ func BuildAdjustCourseList(res []*model.AdjustCourse) []*courseModel.AdjustCours
 		})
 	}
 	return list
+}
+
+// 自定义课程：kitex 模型 -> 网关模型
+func BuildCustomCourseItem(res *courseKitex.CustomCourseItem) *api.CustomCourseItem {
+	if res == nil {
+		return nil
+	}
+	return &api.CustomCourseItem{
+		Id:         res.Id,
+		Name:       res.Name,
+		Teacher:    res.Teacher,
+		Location:   res.Location,
+		StartClass: res.StartClass,
+		EndClass:   res.EndClass,
+		StartWeek:  res.StartWeek,
+		EndWeek:    res.EndWeek,
+		Weekday:    res.Weekday,
+		Single:     res.Single,
+		Double_:    res.Double_,
+		Color:      res.Color,
+		Remark:     res.Remark,
+	}
+}
+
+func BuildCustomCourseItemList(res []*courseKitex.CustomCourseItem) []*api.CustomCourseItem {
+	list := make([]*api.CustomCourseItem, 0, len(res))
+	for _, v := range res {
+		c := BuildCustomCourseItem(v)
+		if c != nil {
+			list = append(list, c)
+		}
+	}
+	return list
+}
+
+// 自定义课程：网关模型 -> kitex 模型（发给 RPC）
+func BuildCustomCourseItemForRPC(res *api.CustomCourseItem) *courseKitex.CustomCourseItem {
+	if res == nil {
+		return nil
+	}
+	return &courseKitex.CustomCourseItem{
+		Id:         res.Id,
+		Name:       res.Name,
+		Teacher:    res.Teacher,
+		Location:   res.Location,
+		StartClass: res.StartClass,
+		EndClass:   res.EndClass,
+		StartWeek:  res.StartWeek,
+		EndWeek:    res.EndWeek,
+		Weekday:    res.Weekday,
+		Single:     res.Single,
+		Double_:    res.Double_,
+		Color:      res.Color,
+		Remark:     res.Remark,
+	}
 }

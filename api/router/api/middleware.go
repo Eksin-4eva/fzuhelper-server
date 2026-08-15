@@ -589,6 +589,20 @@ func _updateadjustcourseMw() []app.HandlerFunc {
 	return nil
 }
 
+func _upsertcustomcourseMw() []app.HandlerFunc {
+	return []app.HandlerFunc{
+		mw.Auth(),
+		mw.GetHeaderParams(),
+	}
+}
+
+func _deletecustomcourseMw() []app.HandlerFunc {
+	return []app.HandlerFunc{
+		mw.Auth(),
+		mw.GetHeaderParams(),
+	}
+}
+
 func _getautoadjustcourselistMw() []app.HandlerFunc {
 	// your code...
 	return nil
