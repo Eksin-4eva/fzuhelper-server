@@ -1451,6 +1451,115 @@ func (p *UpdateAdjustCourseResponse) String() string {
 	return fmt.Sprintf("UpdateAdjustCourseResponse(%+v)", *p)
 }
 
+// 新增或更新自定义课程
+type UpsertCustomCourseRequest struct {
+	Term   string            `thrift:"term,1,required" form:"term,required" json:"term,required" query:"term,required"`
+	Course *CustomCourseItem `thrift:"course,2,required" form:"course,required" json:"course,required" query:"course,required"`
+}
+
+func NewUpsertCustomCourseRequest() *UpsertCustomCourseRequest {
+	return &UpsertCustomCourseRequest{}
+}
+func (p *UpsertCustomCourseRequest) InitDefault() {
+	if p.Course == nil {
+		p.Course = NewCustomCourseItem()
+	}
+	p.Course.InitDefault()
+}
+func (p *UpsertCustomCourseRequest) GetTerm() (v string) {
+	return p.Term
+}
+func (p *UpsertCustomCourseRequest) GetCourse() (v *CustomCourseItem) {
+	if !p.IsSetCourse() {
+		return nil
+	}
+	return p.Course
+}
+func (p *UpsertCustomCourseRequest) IsSetCourse() bool {
+	return p.Course != nil
+}
+func (p *UpsertCustomCourseRequest) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("UpsertCustomCourseRequest(%+v)", *p)
+}
+
+type UpsertCustomCourseResponse struct {
+	Base     *model.BaseResp `thrift:"base,1,required" form:"base,required" json:"base,required" query:"base,required"`
+	CourseId *string         `thrift:"course_id,2,optional" form:"course_id" json:"course_id,omitempty" query:"course_id"`
+}
+
+func NewUpsertCustomCourseResponse() *UpsertCustomCourseResponse {
+	return &UpsertCustomCourseResponse{}
+}
+func (p *UpsertCustomCourseResponse) InitDefault() {}
+
+func (p *UpsertCustomCourseResponse) GetBase() (v *model.BaseResp) {
+	if !p.IsSetBase() {
+		return nil
+	}
+	return p.Base
+}
+func (p *UpsertCustomCourseResponse) IsSetBase() bool { return p.Base != nil }
+
+func (p *UpsertCustomCourseResponse) GetCourseId() (v string) {
+	if !p.IsSetCourseId() {
+		return ""
+	}
+	return *p.CourseId
+}
+func (p *UpsertCustomCourseResponse) IsSetCourseId() bool { return p.CourseId != nil }
+
+func (p *UpsertCustomCourseResponse) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("UpsertCustomCourseResponse(%+v)", *p)
+}
+
+// 删除自定义课程
+type DeleteCustomCourseRequest struct {
+	Term     string `thrift:"term,1,required" form:"term,required" json:"term,required" query:"term,required"`
+	CourseId string `thrift:"course_id,2,required" form:"course_id,required" json:"course_id,required" query:"course_id,required"`
+}
+
+func NewDeleteCustomCourseRequest() *DeleteCustomCourseRequest {
+	return &DeleteCustomCourseRequest{}
+}
+func (p *DeleteCustomCourseRequest) InitDefault()            {}
+func (p *DeleteCustomCourseRequest) GetTerm() (v string)     { return p.Term }
+func (p *DeleteCustomCourseRequest) GetCourseId() (v string) { return p.CourseId }
+func (p *DeleteCustomCourseRequest) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("DeleteCustomCourseRequest(%+v)", *p)
+}
+
+type DeleteCustomCourseResponse struct {
+	Base *model.BaseResp `thrift:"base,1,required" form:"base,required" json:"base,required" query:"base,required"`
+}
+
+func NewDeleteCustomCourseResponse() *DeleteCustomCourseResponse {
+	return &DeleteCustomCourseResponse{}
+}
+func (p *DeleteCustomCourseResponse) InitDefault() {}
+
+func (p *DeleteCustomCourseResponse) GetBase() (v *model.BaseResp) {
+	if !p.IsSetBase() {
+		return nil
+	}
+	return p.Base
+}
+func (p *DeleteCustomCourseResponse) IsSetBase() bool { return p.Base != nil }
+func (p *DeleteCustomCourseResponse) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("DeleteCustomCourseResponse(%+v)", *p)
+}
+
 // # ----------------------------------------------------------------------------
 // # launch_screen 开屏页
 // # ----------------------------------------------------------------------------
@@ -5041,6 +5150,10 @@ type CourseService interface {
 	GetAutoAdjustCourseList(ctx context.Context, req *GetAutoAdjustCourseListRequest) (r *GetAutoAdjustCourseListResponse, err error)
 	// 更新自动调课信息
 	UpdateAdjustCourse(ctx context.Context, req *UpdateAdjustCourseRequest) (r *UpdateAdjustCourseResponse, err error)
+	// 新增或更新自定义课程
+	UpsertCustomCourse(ctx context.Context, req *UpsertCustomCourseRequest) (r *UpsertCustomCourseResponse, err error)
+	// 删除自定义课程
+	DeleteCustomCourse(ctx context.Context, req *DeleteCustomCourseRequest) (r *DeleteCustomCourseResponse, err error)
 }
 
 type LaunchScreenService interface {
