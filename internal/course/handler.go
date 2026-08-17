@@ -57,8 +57,10 @@ func (s *CourseServiceImpl) GetCourseList(ctx context.Context, req *course.Cours
 	if err != nil {
 		return nil, fmt.Errorf("Course.GetCourseList: Get login data fail %w", err)
 	}
-	stuId := loginData.Id
-	isGraduate := utils.IsGraduate(stuId)
+	// IsGraduate 需要用完整 identifier 判断（研究生有前导 0 / 长度不同），
+	// 但 DB 与缓存 key 用提取后的纯学号，保持与登录链路一致
+	isGraduate := utils.IsGraduate(loginData.Id)
+	stuId := metainfoContext.ExtractIDFromLoginData(loginData)
 	isRefresh := req.IsRefresh != nil && *req.IsRefresh
 	key := singleflight.Key(constants.SingleflightCourseListPrefix, stuId, req.Term, isGraduate, isRefresh)
 
@@ -112,7 +114,7 @@ func (s *CourseServiceImpl) UpsertCustomCourse(ctx context.Context, req *course.
 	if err != nil {
 		return nil, fmt.Errorf("Course.UpsertCustomCourse: Get login data fail %w", err)
 	}
-	stuId := loginData.Id
+	stuId := metainfoContext.ExtractIDFromLoginData(loginData)
 	dbClient := s.ClientSet.DBClient
 
 	courseItem := req.Course
@@ -200,7 +202,7 @@ func (s *CourseServiceImpl) DeleteCustomCourse(ctx context.Context, req *course.
 	if err != nil {
 		return nil, fmt.Errorf("Course.DeleteCustomCourse: Get login data fail %w", err)
 	}
-	stuId := loginData.Id
+	stuId := metainfoContext.ExtractIDFromLoginData(loginData)
 	dbClient := s.ClientSet.DBClient
 
 	if err := dbClient.Course.DeleteCustomCourse(ctx, stuId, req.Term, req.CourseId); err != nil {
@@ -242,8 +244,9 @@ func (s *CourseServiceImpl) GetTermList(ctx context.Context, req *course.TermLis
 	if err != nil {
 		return nil, fmt.Errorf("Course.GetTermList: Get login data fail %w", err)
 	}
-	stuId := loginData.Id
-	isGraduate := utils.IsGraduate(stuId)
+	// IsGraduate 用完整 identifier 判断，缓存 key 用提取后的纯学号
+	isGraduate := utils.IsGraduate(loginData.Id)
+	stuId := metainfoContext.ExtractIDFromLoginData(loginData)
 	key := singleflight.Key(constants.SingleflightCourseTermsPrefix, stuId, isGraduate)
 
 	res, err := singleflight.Do(key, func() ([]string, error) {
