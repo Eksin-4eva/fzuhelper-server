@@ -152,7 +152,6 @@ func BuildCustomCourseItemList(res []*courseKitex.CustomCourseItem) []*api.Custo
 	return list
 }
 
-// 自定义课程：网关模型 -> kitex 模型（发给 RPC）
 func BuildCustomCourseItemForRPC(res *api.CustomCourseItem) *courseKitex.CustomCourseItem {
 	if res == nil {
 		return nil
