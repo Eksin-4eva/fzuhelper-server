@@ -120,7 +120,6 @@ func BuildAdjustCourseList(res []*model.AdjustCourse) []*courseModel.AdjustCours
 	return list
 }
 
-// 自定义课程：kitex 模型 -> 网关模型
 func BuildCustomCourseItem(res *courseKitex.CustomCourseItem) *api.CustomCourseItem {
 	if res == nil {
 		return nil
