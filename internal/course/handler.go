@@ -18,9 +18,11 @@ package course
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 
 	"github.com/west2-online/fzuhelper-server/internal/course/pack"
 	"github.com/west2-online/fzuhelper-server/internal/course/service"
@@ -164,20 +166,52 @@ func (s *CourseServiceImpl) UpsertCustomCourse(ctx context.Context, req *course.
 			return resp, nil
 		}
 	} else {
-		// 更新：根据 course_id 更新
+		old, err := dbClient.Course.GetCustomCourseByID(ctx, stuId, req.Term, *courseId)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				resp.Base = base.BuildBaseResp(errno.CustomCourseNotFoundError)
+				return resp, nil
+			}
+			resp.Base = base.BuildBaseResp(err)
+			return resp, nil
+		}
+
+		// required 字段：前端一定传了，直接用新值
+		teacher := old.Teacher
+		if courseItem.Teacher != nil {
+			teacher = *courseItem.Teacher
+		}
+		single := old.IsSingle
+		if courseItem.Single != nil {
+			single = *courseItem.Single
+		}
+		double_ := old.IsDouble
+		if courseItem.Double_ != nil {
+			double_ = *courseItem.Double_
+		}
+		color := old.Color
+		if courseItem.Color != nil {
+			color = *courseItem.Color
+		}
+		remark := old.Remark
+		if courseItem.Remark != nil {
+			remark = *courseItem.Remark
+		}
+
+		// 全字段 PUT 覆盖（合并后的完整数据）
 		updates := map[string]interface{}{
 			"name":        courseItem.Name,
-			"teacher":     getStringValue(courseItem.Teacher),
+			"teacher":     teacher,
 			"location":    courseItem.Location,
 			"start_class": int(courseItem.StartClass),
 			"end_class":   int(courseItem.EndClass),
 			"start_week":  int(courseItem.StartWeek),
 			"end_week":    int(courseItem.EndWeek),
 			"weekday":     int(courseItem.Weekday),
-			"is_single":   getBoolValue(courseItem.Single),
-			"is_double":   getBoolValue(courseItem.Double_),
-			"color":       getStringValueWithDefault(courseItem.Color, "#FF5733"),
-			"remark":      getStringValue(courseItem.Remark),
+			"is_single":   single,
+			"is_double":   double_,
+			"color":       color,
+			"remark":      remark,
 		}
 
 		rows, err := dbClient.Course.UpdateCustomCourse(ctx, stuId, req.Term, *courseId, updates)
