@@ -30,30 +30,46 @@ import (
 
 func TestDBCourse_DeleteCustomCourse(t *testing.T) {
 	type testCase struct {
-		name           string
-		mockError      error
-		stuId          string
-		term           string
-		courseId       string
-		expectingError bool
+		name             string
+		mockError        error
+		mockRowsAffected int64
+		stuId            string
+		term             string
+		courseId         string
+		expectingError   bool
+		expectedRows     int64
 	}
 
 	testCases := []testCase{
 		{
-			name:           "DeleteCustomCourse_Success",
-			mockError:      nil,
-			stuId:          "222200311",
-			term:           "202401",
-			courseId:       "uuid-1",
-			expectingError: false,
+			name:             "DeleteCustomCourse_Success",
+			mockError:        nil,
+			mockRowsAffected: 1,
+			stuId:            "222200311",
+			term:             "202401",
+			courseId:         "uuid-1",
+			expectingError:   false,
+			expectedRows:     1,
 		},
 		{
-			name:           "DeleteCustomCourse_DBError",
-			mockError:      fmt.Errorf("db error"),
-			stuId:          "222200311",
-			term:           "202401",
-			courseId:       "uuid-1",
-			expectingError: true,
+			name:             "DeleteCustomCourse_NotFound",
+			mockError:        nil,
+			mockRowsAffected: 0,
+			stuId:            "222200311",
+			term:             "202401",
+			courseId:         "not-exist",
+			expectingError:   false,
+			expectedRows:     0,
+		},
+		{
+			name:             "DeleteCustomCourse_DBError",
+			mockError:        fmt.Errorf("db error"),
+			mockRowsAffected: 0,
+			stuId:            "222200311",
+			term:             "202401",
+			courseId:         "uuid-1",
+			expectingError:   true,
+			expectedRows:     0,
 		},
 	}
 
@@ -71,6 +87,7 @@ func TestDBCourse_DeleteCustomCourse(t *testing.T) {
 				return mockGormDB
 			}).Build()
 			mockey.Mock((*gorm.DB).Delete).To(func(value interface{}, conds ...interface{}) *gorm.DB {
+				mockGormDB.RowsAffected = tc.mockRowsAffected
 				if tc.mockError != nil {
 					mockGormDB.Error = tc.mockError
 					return mockGormDB
@@ -78,13 +95,14 @@ func TestDBCourse_DeleteCustomCourse(t *testing.T) {
 				return mockGormDB
 			}).Build()
 
-			err := mockDBCourse.DeleteCustomCourse(context.Background(), tc.stuId, tc.term, tc.courseId)
+			rows, err := mockDBCourse.DeleteCustomCourse(context.Background(), tc.stuId, tc.term, tc.courseId)
 
 			if tc.expectingError {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
 			}
+			assert.Equal(t, tc.expectedRows, rows)
 		})
 	}
 }

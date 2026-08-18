@@ -180,8 +180,13 @@ func (s *CourseServiceImpl) UpsertCustomCourse(ctx context.Context, req *course.
 			"remark":      getStringValue(courseItem.Remark),
 		}
 
-		if err := dbClient.Course.UpdateCustomCourse(ctx, stuId, req.Term, *courseId, updates); err != nil {
+		rows, err := dbClient.Course.UpdateCustomCourse(ctx, stuId, req.Term, *courseId, updates)
+		if err != nil {
 			resp.Base = base.BuildBaseResp(err)
+			return resp, nil
+		}
+		if rows == 0 {
+			resp.Base = base.BuildBaseResp(errno.CustomCourseNotFoundError)
 			return resp, nil
 		}
 	}
@@ -203,8 +208,13 @@ func (s *CourseServiceImpl) DeleteCustomCourse(ctx context.Context, req *course.
 	stuId := metainfoContext.ExtractIDFromLoginData(loginData)
 	dbClient := s.ClientSet.DBClient
 
-	if err := dbClient.Course.DeleteCustomCourse(ctx, stuId, req.Term, req.CourseId); err != nil {
+	rows, err := dbClient.Course.DeleteCustomCourse(ctx, stuId, req.Term, req.CourseId)
+	if err != nil {
 		resp.Base = base.BuildBaseResp(errno.InternalServiceError.WithError(err))
+		return resp, nil
+	}
+	if rows == 0 {
+		resp.Base = base.BuildBaseResp(errno.CustomCourseNotFoundError)
 		return resp, nil
 	}
 

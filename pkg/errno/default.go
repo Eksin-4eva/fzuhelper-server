@@ -48,4 +48,7 @@ var (
 
 	// jwch
 	EvaluationNotFoundError = NewErrNo(BizJwchEvaluationNotFoundCode, "请先对任课教师进行评价") // jwch 未进行评测
+
+	// course
+	CustomCourseNotFoundError = NewErrNo(BizCustomCourseNotExistCode, "自定义课程不存在")
 )

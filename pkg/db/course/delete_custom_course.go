@@ -22,9 +22,10 @@ import (
 	"github.com/west2-online/fzuhelper-server/pkg/db/model"
 )
 
-// DeleteCustomCourse 删除自定义课程（软删除）
-func (c *DBCourse) DeleteCustomCourse(ctx context.Context, stuId, term, courseId string) error {
-	return c.client.WithContext(ctx).
+// DeleteCustomCourse 删除自定义课程（软删除），返回受影响的行数
+func (c *DBCourse) DeleteCustomCourse(ctx context.Context, stuId, term, courseId string) (int64, error) {
+	result := c.client.WithContext(ctx).
 		Where("stu_id = ? AND term = ? AND course_id = ?", stuId, term, courseId).
-		Delete(&model.UserCustomCourse{}).Error
+		Delete(&model.UserCustomCourse{})
+	return result.RowsAffected, result.Error
 }

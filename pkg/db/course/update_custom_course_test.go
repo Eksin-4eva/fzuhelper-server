@@ -30,22 +30,25 @@ import (
 
 func TestDBCourse_UpdateCustomCourse(t *testing.T) {
 	type testCase struct {
-		name           string
-		mockError      error
-		stuId          string
-		term           string
-		courseId       string
-		updates        map[string]interface{}
-		expectingError bool
+		name             string
+		mockError        error
+		mockRowsAffected int64
+		stuId            string
+		term             string
+		courseId         string
+		updates          map[string]interface{}
+		expectingError   bool
+		expectedRows     int64
 	}
 
 	testCases := []testCase{
 		{
-			name:      "UpdateCustomCourse_Success",
-			mockError: nil,
-			stuId:     "222200311",
-			term:      "202401",
-			courseId:  "uuid-1",
+			name:             "UpdateCustomCourse_Success",
+			mockError:        nil,
+			mockRowsAffected: 1,
+			stuId:            "222200311",
+			term:             "202401",
+			courseId:         "uuid-1",
 			updates: map[string]interface{}{
 				"name":        "自习（更新）",
 				"location":    "图书馆3楼",
@@ -53,17 +56,33 @@ func TestDBCourse_UpdateCustomCourse(t *testing.T) {
 				"end_class":   4,
 			},
 			expectingError: false,
+			expectedRows:   1,
 		},
 		{
-			name:      "UpdateCustomCourse_DBError",
-			mockError: fmt.Errorf("db error"),
-			stuId:     "222200311",
-			term:      "202401",
-			courseId:  "uuid-1",
+			name:             "UpdateCustomCourse_NotFound",
+			mockError:        nil,
+			mockRowsAffected: 0,
+			stuId:            "222200311",
+			term:             "202401",
+			courseId:         "not-exist",
+			updates: map[string]interface{}{
+				"name": "自习（更新）",
+			},
+			expectingError: false,
+			expectedRows:   0,
+		},
+		{
+			name:             "UpdateCustomCourse_DBError",
+			mockError:        fmt.Errorf("db error"),
+			mockRowsAffected: 0,
+			stuId:            "222200311",
+			term:             "202401",
+			courseId:         "uuid-1",
 			updates: map[string]interface{}{
 				"name": "自习（更新）",
 			},
 			expectingError: true,
+			expectedRows:   0,
 		},
 	}
 
@@ -84,6 +103,7 @@ func TestDBCourse_UpdateCustomCourse(t *testing.T) {
 				return mockGormDB
 			}).Build()
 			mockey.Mock((*gorm.DB).Updates).To(func(values interface{}) *gorm.DB {
+				mockGormDB.RowsAffected = tc.mockRowsAffected
 				if tc.mockError != nil {
 					mockGormDB.Error = tc.mockError
 					return mockGormDB
@@ -91,13 +111,14 @@ func TestDBCourse_UpdateCustomCourse(t *testing.T) {
 				return mockGormDB
 			}).Build()
 
-			err := mockDBCourse.UpdateCustomCourse(context.Background(), tc.stuId, tc.term, tc.courseId, tc.updates)
+			rows, err := mockDBCourse.UpdateCustomCourse(context.Background(), tc.stuId, tc.term, tc.courseId, tc.updates)
 
 			if tc.expectingError {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
 			}
+			assert.Equal(t, tc.expectedRows, rows)
 		})
 	}
 }
