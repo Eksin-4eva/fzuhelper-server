@@ -55,17 +55,31 @@ func TestGetCourseList(t *testing.T) {
 	type testCase struct {
 		name           string
 		url            string
-		mockResp       []*model.Course
+		mockResp       *course.CourseListResponse
 		mockErr        error
 		expectContains string
+		expectAbsence  string
 	}
 
 	testCases := []testCase{
 		{
-			name:           "success",
+			name:           "success no custom courses (v1 must not emit custom_courses)",
 			url:            "/api/v1/jwch/course/list?term=202401",
-			mockResp:       []*model.Course{},
-			expectContains: `{"code":"10000","message":"ok","data":[]}`,
+			mockResp:       &course.CourseListResponse{Data: []*model.Course{}},
+			expectContains: `{"code":"10000","message":"Success","data":{"base":{"code":10000,"msg":"Success"},"data":[]}}`,
+			expectAbsence:  `custom_courses`,
+		},
+		{
+			name: "success with custom courses (v1 still suppresses custom_courses)",
+			url:  "/api/v1/jwch/course/list?term=202401",
+			mockResp: &course.CourseListResponse{
+				Data: []*model.Course{},
+				CustomCourses: []*course.CustomCourseItem{
+					{Name: "x", Location: "y", StartClass: 1, EndClass: 2, StartWeek: 1, EndWeek: 2, Weekday: 1},
+				},
+			},
+			expectContains: `{"code":"10000","message":"Success","data":{"base":{"code":10000,"msg":"Success"},"data":[]}}`,
+			expectAbsence:  `custom_courses`,
 		},
 		{
 			name:           "rpc error",
@@ -86,13 +100,80 @@ func TestGetCourseList(t *testing.T) {
 	defer mockey.UnPatchAll()
 	for _, tc := range testCases {
 		mockey.PatchConvey(tc.name, t, func() {
-			mockey.Mock(rpc.GetCourseListRPC).To(func(ctx context.Context, req *course.CourseListRequest) ([]*model.Course, error) {
+			mockey.Mock(rpc.GetCourseListRPC).To(func(ctx context.Context, req *course.CourseListRequest) (*course.CourseListResponse, error) {
 				return tc.mockResp, tc.mockErr
 			}).Build()
 
 			res := ut.PerformRequest(router, consts.MethodGet, tc.url, nil)
 			assert.Equal(t, consts.StatusOK, res.Result().StatusCode())
-			assert.Contains(t, string(res.Result().Body()), tc.expectContains)
+			body := string(res.Result().Body())
+			assert.Contains(t, body, tc.expectContains)
+			if tc.expectAbsence != "" {
+				assert.NotContains(t, body, tc.expectAbsence)
+			}
+		})
+	}
+}
+
+func TestGetCourseListV2(t *testing.T) {
+	type testCase struct {
+		name           string
+		url            string
+		mockResp       *course.CourseListResponse
+		mockErr        error
+		expectContains string
+		expectAbsence  string
+	}
+
+	testCases := []testCase{
+		{
+			name:           "v2 success no custom courses -> empty array emitted",
+			url:            "/api/v2/jwch/course/list?term=202401",
+			mockResp:       &course.CourseListResponse{Data: []*model.Course{}},
+			expectContains: `{"code":"10000","message":"Success","data":{"base":{"code":10000,"msg":"Success"},"data":[],"custom_courses":[]}}`,
+		},
+		{
+			name: "v2 success with custom courses -> populated array emitted",
+			url:  "/api/v2/jwch/course/list?term=202401",
+			mockResp: &course.CourseListResponse{
+				Data: []*model.Course{},
+				CustomCourses: []*course.CustomCourseItem{
+					{Name: "x", Location: "y", StartClass: 1, EndClass: 2, StartWeek: 1, EndWeek: 2, Weekday: 1},
+				},
+			},
+			expectContains: `"custom_courses":[{"name":"x"`,
+		},
+		{
+			name:           "v2 rpc error",
+			url:            "/api/v2/jwch/course/list?term=202401",
+			mockErr:        errno.InternalServiceError,
+			expectContains: `{"code":"50001","message":"内部服务错误"}`,
+			expectAbsence:  `custom_courses`,
+		},
+		{
+			name:           "v2 bind error",
+			url:            "/api/v2/jwch/course/list",
+			expectContains: `{"code":"20001","message":"参数错误,`,
+		},
+	}
+
+	router := route.NewEngine(&config.Options{})
+	router.GET("/api/v2/jwch/course/list", GetCourseListV2)
+
+	defer mockey.UnPatchAll()
+	for _, tc := range testCases {
+		mockey.PatchConvey(tc.name, t, func() {
+			mockey.Mock(rpc.GetCourseListRPC).To(func(ctx context.Context, req *course.CourseListRequest) (*course.CourseListResponse, error) {
+				return tc.mockResp, tc.mockErr
+			}).Build()
+
+			res := ut.PerformRequest(router, consts.MethodGet, tc.url, nil)
+			assert.Equal(t, consts.StatusOK, res.Result().StatusCode())
+			body := string(res.Result().Body())
+			assert.Contains(t, body, tc.expectContains)
+			if tc.expectAbsence != "" {
+				assert.NotContains(t, body, tc.expectAbsence)
+			}
 		})
 	}
 }

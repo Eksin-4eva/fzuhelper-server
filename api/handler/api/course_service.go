@@ -59,7 +59,6 @@ func GetCourseList(ctx context.Context, c *app.RequestContext) {
 	resp := new(api.CourseListResponse)
 	resp.Base = pack.BuildSuccessBase()
 	resp.Data = pack.BuildCourseList(res.Data)
-	resp.CustomCourses = pack.BuildCustomCourseItemList(res.CustomCourses)
 	pack.RespData(c, resp)
 }
 
@@ -255,5 +254,34 @@ func DeleteCustomCourse(ctx context.Context, c *app.RequestContext) {
 
 	resp := new(api.DeleteCustomCourseResponse)
 	resp.Base = pack.BuildSuccessBase()
+	pack.RespData(c, resp)
+}
+
+// GetCourseListV2 .
+// @router /api/v2/jwch/course/list [GET]
+func GetCourseListV2(ctx context.Context, c *app.RequestContext) {
+	var req api.CourseListV2Request
+	var err error
+
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		pack.RespError(c, errno.ParamError.WithError(err))
+		return
+	}
+
+	// 复用 v1 RPC：返回值已含 CustomCourses（由 kitex handler getCustomCourses 填充）
+	res, err := rpc.GetCourseListRPC(ctx, &course.CourseListRequest{
+		Term:      req.Term,
+		IsRefresh: req.IsRefresh,
+	})
+	if err != nil {
+		pack.RespError(c, err)
+		return
+	}
+
+	resp := new(api.CourseListV2Response)
+	resp.Base = pack.BuildSuccessBase()
+	resp.Data = pack.BuildCourseList(res.Data)
+	resp.CustomCourses = pack.BuildCustomCourseItemList(res.CustomCourses)
 	pack.RespData(c, resp)
 }

@@ -645,3 +645,13 @@ func _listimageMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
+
+func _course1Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _getcourselistv2Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
