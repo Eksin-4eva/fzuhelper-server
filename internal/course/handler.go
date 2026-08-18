@@ -176,7 +176,7 @@ func (s *CourseServiceImpl) UpsertCustomCourse(ctx context.Context, req *course.
 			return resp, nil
 		}
 
-		// required 字段：前端一定传了，直接用新值
+		// optional 字段：前端未传则用旧值兜底，避免被零值覆盖
 		teacher := old.Teacher
 		if courseItem.Teacher != nil {
 			teacher = *courseItem.Teacher
