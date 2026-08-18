@@ -57,10 +57,8 @@ func (s *CourseServiceImpl) GetCourseList(ctx context.Context, req *course.Cours
 	if err != nil {
 		return nil, fmt.Errorf("Course.GetCourseList: Get login data fail %w", err)
 	}
-	// IsGraduate 需要用完整 identifier 判断（研究生有前导 0 / 长度不同），
-	// 但 DB 与缓存 key 用提取后的纯学号，保持与登录链路一致
-	isGraduate := utils.IsGraduate(loginData.Id)
 	stuId := metainfoContext.ExtractIDFromLoginData(loginData)
+	isGraduate := utils.IsGraduate(loginData.Id)
 	isRefresh := req.IsRefresh != nil && *req.IsRefresh
 	key := singleflight.Key(constants.SingleflightCourseListPrefix, stuId, req.Term, isGraduate, isRefresh)
 
@@ -244,9 +242,8 @@ func (s *CourseServiceImpl) GetTermList(ctx context.Context, req *course.TermLis
 	if err != nil {
 		return nil, fmt.Errorf("Course.GetTermList: Get login data fail %w", err)
 	}
-	// IsGraduate 用完整 identifier 判断，缓存 key 用提取后的纯学号
-	isGraduate := utils.IsGraduate(loginData.Id)
 	stuId := metainfoContext.ExtractIDFromLoginData(loginData)
+	isGraduate := utils.IsGraduate(loginData.Id)
 	key := singleflight.Key(constants.SingleflightCourseTermsPrefix, stuId, isGraduate)
 
 	res, err := singleflight.Do(key, func() ([]string, error) {

@@ -34,7 +34,6 @@ import (
 	"github.com/west2-online/fzuhelper-server/pkg/constants"
 	"github.com/west2-online/fzuhelper-server/pkg/db/model"
 	"github.com/west2-online/fzuhelper-server/pkg/errno"
-	"github.com/west2-online/fzuhelper-server/pkg/logger"
 	"github.com/west2-online/fzuhelper-server/pkg/taskqueue"
 	"github.com/west2-online/fzuhelper-server/pkg/umeng"
 	"github.com/west2-online/fzuhelper-server/pkg/utils"
@@ -196,18 +195,18 @@ func (s *CourseService) putExamToDatabase(stuId string, term string, rawCourses 
 	if old == nil {
 		return nil
 	}
-	if old.ExamInfoSHA256 == examInfoSHA256 {
+	if old.ExamInfoSHA256 != nil && *old.ExamInfoSHA256 == examInfoSHA256 {
 		return nil
 	}
 
 	var oldExams []CourseExamInfo
-	if old.ExamInfo != "" {
-		if err = sonic.Unmarshal([]byte(old.ExamInfo), &oldExams); err != nil {
+	if old.ExamInfo != nil {
+		if err = sonic.Unmarshal([]byte(*old.ExamInfo), &oldExams); err != nil {
 			return errno.Errorf(errno.InternalJSONErrorCode,
 				"service.putExamToDatabase: decode exam info failed: %v", err)
 		}
 	}
-	if old.ExamInfoSHA256 == "" {
+	if old.ExamInfoSHA256 == nil || *old.ExamInfoSHA256 == "" {
 		// 历史数据没有考试快照时只建立基线，不把已有考试信息当作新增变化通知。
 		return s.updateExamSnapshot(old.Id, examInfo, examInfoSHA256)
 	}
@@ -254,8 +253,8 @@ func (s *CourseService) updateExamSnapshot(id int64, examInfo, examInfoSHA256 st
 	// 快照更新是本次考试变化处理的提交步骤；成功后下一次刷新不会再次识别同一变化。
 	_, err := s.db.Course.UpdateUserTermCourse(s.ctx, &model.UserCourse{
 		Id:             id,
-		ExamInfo:       examInfo,
-		ExamInfoSHA256: examInfoSHA256,
+		ExamInfo:       &examInfo,
+		ExamInfoSHA256: &examInfoSHA256,
 	})
 	return err
 }
@@ -263,19 +262,10 @@ func (s *CourseService) updateExamSnapshot(id int64, examInfo, examInfoSHA256 st
 func (s *CourseService) sendExamNotification(change courseExamChange) {
 	// 与成绩通知一致，推送失败仅由 Umeng 任务队列统一记录，不影响业务快照。
 	// 这里直接不返回错误了,直接打印错误日志,因为就是安卓跟iOS都直推送一次,如果错过就直接算了
-	title := fmt.Sprintf("%v考试信息更新啦", change.Exam.Name)
+	title := "考试更新啦"
+	text := change.Exam.Name + "考试已更新"
 	description := fmt.Sprintf("考试信息更新%v", change.Tag[:12])
-	if err := umeng.SendAndroidGroupcastWithGoApp(
-		title, "", "", change.Tag, description, constants.UmengExamRoomDeeplink,
-	); err != nil {
-		logger.Errorf("CourseService.sendExamNotification: send Android notification failed: %v", err)
-	}
-
-	if err := umeng.SendIOSGroupcast(
-		title, "", "", change.Tag, description, constants.UmengExamRoomDeeplink,
-	); err != nil {
-		logger.Errorf("CourseService.sendExamNotification: send iOS notification failed: %v", err)
-	}
+	umeng.PushByType(constants.UmengPushTypeExam, title, text, []string{change.Exam.Name}, "", change.Tag, description, constants.UmengExamRoomDeeplink)
 }
 
 func (s *CourseService) GetCourseListYjsy(req *course.CourseListRequest, loginData *kitexModel.LoginData) ([]*kitexModel.Course, error) {
