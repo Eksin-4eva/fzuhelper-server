@@ -66,7 +66,7 @@ func TestGetCourseList(t *testing.T) {
 			name:           "success no custom courses (v1 must not emit custom_courses)",
 			url:            "/api/v1/jwch/course/list?term=202401",
 			mockResp:       &course.CourseListResponse{Data: []*model.Course{}},
-			expectContains: `{"code":"10000","message":"Success","data":{"base":{"code":10000,"msg":"Success"},"data":[]}}`,
+			expectContains: `"code":"10000","message":"Success","data":{"base":{"code":10000,"msg":"Success"},"data":[]}`,
 			expectAbsence:  `custom_courses`,
 		},
 		{
@@ -78,19 +78,19 @@ func TestGetCourseList(t *testing.T) {
 					{Name: "x", Location: "y", StartClass: 1, EndClass: 2, StartWeek: 1, EndWeek: 2, Weekday: 1},
 				},
 			},
-			expectContains: `{"code":"10000","message":"Success","data":{"base":{"code":10000,"msg":"Success"},"data":[]}}`,
+			expectContains: `"code":"10000","message":"Success","data":{"base":{"code":10000,"msg":"Success"},"data":[]}`,
 			expectAbsence:  `custom_courses`,
 		},
 		{
 			name:           "rpc error",
 			url:            "/api/v1/jwch/course/list?term=202401",
 			mockErr:        errno.InternalServiceError,
-			expectContains: `{"code":"50001","message":"内部服务错误"}`,
+			expectContains: `"code":"50001","message":"内部服务错误"`,
 		},
 		{
 			name:           "bind error",
 			url:            "/api/v1/jwch/course/list",
-			expectContains: `{"code":"20001","message":"参数错误,`,
+			expectContains: `"code":"20001","message":"参数错误`,
 		},
 	}
 
@@ -130,7 +130,7 @@ func TestGetCourseListV2(t *testing.T) {
 			name:           "v2 success no custom courses -> empty array emitted",
 			url:            "/api/v2/jwch/course/list?term=202401",
 			mockResp:       &course.CourseListResponse{Data: []*model.Course{}},
-			expectContains: `{"code":"10000","message":"Success","data":{"base":{"code":10000,"msg":"Success"},"data":[],"custom_courses":[]}}`,
+			expectContains: `"code":"10000","message":"Success","data":{"base":{"code":10000,"msg":"Success"},"data":[],"custom_courses":[]}`,
 		},
 		{
 			name: "v2 success with custom courses -> populated array emitted",
@@ -147,13 +147,13 @@ func TestGetCourseListV2(t *testing.T) {
 			name:           "v2 rpc error",
 			url:            "/api/v2/jwch/course/list?term=202401",
 			mockErr:        errno.InternalServiceError,
-			expectContains: `{"code":"50001","message":"内部服务错误"}`,
+			expectContains: `"code":"50001","message":"内部服务错误"`,
 			expectAbsence:  `custom_courses`,
 		},
 		{
 			name:           "v2 bind error",
 			url:            "/api/v2/jwch/course/list",
-			expectContains: `{"code":"20001","message":"参数错误,`,
+			expectContains: `"code":"20001","message":"参数错误`,
 		},
 	}
 

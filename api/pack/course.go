@@ -125,7 +125,7 @@ func BuildCustomCourseItem(res *courseKitex.CustomCourseItem) *api.CustomCourseI
 		return nil
 	}
 	return &api.CustomCourseItem{
-		Id:         res.Id,
+		ID:         res.Id,
 		Name:       res.Name,
 		Teacher:    res.Teacher,
 		Location:   res.Location,
@@ -157,7 +157,7 @@ func BuildCustomCourseItemForRPC(res *api.CustomCourseItem) *courseKitex.CustomC
 		return nil
 	}
 	return &courseKitex.CustomCourseItem{
-		Id:         res.Id,
+		Id:         res.ID,
 		Name:       res.Name,
 		Teacher:    res.Teacher,
 		Location:   res.Location,

@@ -21,6 +21,7 @@ package api
 import (
 	"context"
 	"fmt"
+
 	"github.com/west2-online/fzuhelper-server/api/model/model"
 )
 
@@ -207,8 +208,7 @@ func (p *GetLoginDataResponse) String() string {
 	return fmt.Sprintf("GetLoginDataResponse(%+v)", *p)
 }
 
-type GetAccessTokenRequest struct {
-}
+type GetAccessTokenRequest struct{}
 
 func NewGetAccessTokenRequest() *GetAccessTokenRequest {
 	return &GetAccessTokenRequest{}
@@ -251,8 +251,7 @@ func (p *GetAccessTokenResponse) String() string {
 	return fmt.Sprintf("GetAccessTokenResponse(%+v)", *p)
 }
 
-type RefreshTokenRequest struct {
-}
+type RefreshTokenRequest struct{}
 
 func NewRefreshTokenRequest() *RefreshTokenRequest {
 	return &RefreshTokenRequest{}
@@ -295,8 +294,7 @@ func (p *RefreshTokenResponse) String() string {
 	return fmt.Sprintf("RefreshTokenResponse(%+v)", *p)
 }
 
-type TestAuthRequest struct {
-}
+type TestAuthRequest struct{}
 
 func NewTestAuthRequest() *TestAuthRequest {
 	return &TestAuthRequest{}
@@ -334,8 +332,7 @@ func (p *TestAuthResponse) String() string {
 	return fmt.Sprintf("TestAuthResponse(%+v)", *p)
 }
 
-type GetUserInfoRequest struct {
-}
+type GetUserInfoRequest struct{}
 
 func NewGetUserInfoRequest() *GetUserInfoRequest {
 	return &GetUserInfoRequest{}
@@ -562,8 +559,7 @@ func (p *BindInvitationResponse) String() string {
 	return fmt.Sprintf("BindInvitationResponse(%+v)", *p)
 }
 
-type GetFriendListRequest struct {
-}
+type GetFriendListRequest struct{}
 
 func NewGetFriendListRequest() *GetFriendListRequest {
 	return &GetFriendListRequest{}
@@ -668,8 +664,7 @@ func (p *DeleteFriendResponse) String() string {
 	return fmt.Sprintf("DeleteFriendResponse(%+v)", *p)
 }
 
-type CancelInviteRequest struct {
-}
+type CancelInviteRequest struct{}
 
 func NewCancelInviteRequest() *CancelInviteRequest {
 	return &CancelInviteRequest{}
@@ -716,8 +711,7 @@ func (p *CancelInviteResponse) String() string {
 	return fmt.Sprintf("CancelInviteResponse(%+v)", *p)
 }
 
-type GetFriendMaxNumRequest struct {
-}
+type GetFriendMaxNumRequest struct{}
 
 func NewGetFriendMaxNumRequest() *GetFriendMaxNumRequest {
 	return &GetFriendMaxNumRequest{}
@@ -1134,8 +1128,7 @@ func (p *CourseListV2Response) String() string {
 	return fmt.Sprintf("CourseListV2Response(%+v)", *p)
 }
 
-type CourseTermListRequest struct {
-}
+type CourseTermListRequest struct{}
 
 func NewCourseTermListRequest() *CourseTermListRequest {
 	return &CourseTermListRequest{}
@@ -1187,8 +1180,7 @@ func (p *CourseTermListResponse) String() string {
 	return fmt.Sprintf("CourseTermListResponse(%+v)", *p)
 }
 
-type GetCalendarTokenRequest struct {
-}
+type GetCalendarTokenRequest struct{}
 
 func NewGetCalendarTokenRequest() *GetCalendarTokenRequest {
 	return &GetCalendarTokenRequest{}
@@ -1270,8 +1262,7 @@ func (p *SubscribeCalendarResponse) String() string {
 	return fmt.Sprintf("SubscribeCalendarResponse(%+v)", *p)
 }
 
-type GetLocateDateRequest struct {
-}
+type GetLocateDateRequest struct{}
 
 func NewGetLocateDateRequest() *GetLocateDateRequest {
 	return &GetLocateDateRequest{}
@@ -2542,8 +2533,7 @@ func (p *ListDirFilesForAndroidRequest) String() string {
 	return fmt.Sprintf("ListDirFilesForAndroidRequest(%+v)", *p)
 }
 
-type ListDirFilesForAndroidResponse struct {
-}
+type ListDirFilesForAndroidResponse struct{}
 
 func NewListDirFilesForAndroidResponse() *ListDirFilesForAndroidResponse {
 	return &ListDirFilesForAndroidResponse{}
@@ -2581,8 +2571,7 @@ func (p *GetDownloadUrlForAndroidRequest) String() string {
 	return fmt.Sprintf("GetDownloadUrlForAndroidRequest(%+v)", *p)
 }
 
-type GetDownloadUrlForAndroidResponse struct {
-}
+type GetDownloadUrlForAndroidResponse struct{}
 
 func NewGetDownloadUrlForAndroidResponse() *GetDownloadUrlForAndroidResponse {
 	return &GetDownloadUrlForAndroidResponse{}
@@ -2601,8 +2590,7 @@ func (p *GetDownloadUrlForAndroidResponse) String() string {
 // # ----------------------------------------------------------------------------
 // # academic 学业信息
 // # ----------------------------------------------------------------------------
-type GetScoresRequest struct {
-}
+type GetScoresRequest struct{}
 
 func NewGetScoresRequest() *GetScoresRequest {
 	return &GetScoresRequest{}
@@ -2640,8 +2628,7 @@ func (p *GetScoresResponse) String() string {
 	return fmt.Sprintf("GetScoresResponse(%+v)", *p)
 }
 
-type GetGPARequest struct {
-}
+type GetGPARequest struct{}
 
 func NewGetGPARequest() *GetGPARequest {
 	return &GetGPARequest{}
@@ -2688,8 +2675,7 @@ func (p *GetGPAResponse) String() string {
 	return fmt.Sprintf("GetGPAResponse(%+v)", *p)
 }
 
-type GetCreditRequest struct {
-}
+type GetCreditRequest struct{}
 
 func NewGetCreditRequest() *GetCreditRequest {
 	return &GetCreditRequest{}
@@ -2727,8 +2713,7 @@ func (p *GetCreditResponse) String() string {
 	return fmt.Sprintf("GetCreditResponse(%+v)", *p)
 }
 
-type GetUnifiedExamRequest struct {
-}
+type GetUnifiedExamRequest struct{}
 
 func NewGetUnifiedExamRequest() *GetUnifiedExamRequest {
 	return &GetUnifiedExamRequest{}
@@ -2766,8 +2751,7 @@ func (p *GetUnifiedExamResponse) String() string {
 	return fmt.Sprintf("GetUnifiedExamResponse(%+v)", *p)
 }
 
-type GetCreditV2Request struct {
-}
+type GetCreditV2Request struct{}
 
 func NewGetCreditV2Request() *GetCreditV2Request {
 	return &GetCreditV2Request{}
@@ -3106,8 +3090,7 @@ func (p *UploadParamsResponse) String() string {
 	return fmt.Sprintf("UploadParamsResponse(%+v)", *p)
 }
 
-type DownloadReleaseApkRequest struct {
-}
+type DownloadReleaseApkRequest struct{}
 
 func NewDownloadReleaseApkRequest() *DownloadReleaseApkRequest {
 	return &DownloadReleaseApkRequest{}
@@ -3154,8 +3137,7 @@ func (p *DownloadReleaseApkResponse) String() string {
 	return fmt.Sprintf("DownloadReleaseApkResponse(%+v)", *p)
 }
 
-type DownloadBetaApkRequest struct {
-}
+type DownloadBetaApkRequest struct{}
 
 func NewDownloadBetaApkRequest() *DownloadBetaApkRequest {
 	return &DownloadBetaApkRequest{}
@@ -3202,8 +3184,7 @@ func (p *DownloadBetaApkResponse) String() string {
 	return fmt.Sprintf("DownloadBetaApkResponse(%+v)", *p)
 }
 
-type GetReleaseVersionRequest struct {
-}
+type GetReleaseVersionRequest struct{}
 
 func NewGetReleaseVersionRequest() *GetReleaseVersionRequest {
 	return &GetReleaseVersionRequest{}
@@ -3320,8 +3301,7 @@ func (p *GetReleaseVersionResponse) String() string {
 	return fmt.Sprintf("GetReleaseVersionResponse(%+v)", *p)
 }
 
-type GetBetaVersionRequest struct {
-}
+type GetBetaVersionRequest struct{}
 
 func NewGetBetaVersionRequest() *GetBetaVersionRequest {
 	return &GetBetaVersionRequest{}
@@ -3726,8 +3706,7 @@ func (p *GetTestResponse) String() string {
 	return fmt.Sprintf("GetTestResponse(%+v)", *p)
 }
 
-type GetCloudRequest struct {
-}
+type GetCloudRequest struct{}
 
 func NewGetCloudRequest() *GetCloudRequest {
 	return &GetCloudRequest{}
@@ -3837,8 +3816,7 @@ func (p *SetCloudResponse) String() string {
 	return fmt.Sprintf("SetCloudResponse(%+v)", *p)
 }
 
-type GetDumpRequest struct {
-}
+type GetDumpRequest struct{}
 
 func NewGetDumpRequest() *GetDumpRequest {
 	return &GetDumpRequest{}
@@ -3890,8 +3868,7 @@ func (p *GetDumpResponse) String() string {
 	return fmt.Sprintf("GetDumpResponse(%+v)", *p)
 }
 
-type AndroidGetVersioneRequest struct {
-}
+type AndroidGetVersioneRequest struct{}
 
 func NewAndroidGetVersioneRequest() *AndroidGetVersioneRequest {
 	return &AndroidGetVersioneRequest{}
@@ -3969,8 +3946,7 @@ func (p *AndroidGetVersionResponse) String() string {
 // # ----------------------------------------------------------------------------
 // # common（通用内容，如隐私政策等信息）
 // # ----------------------------------------------------------------------------
-type GetCSSRequest struct {
-}
+type GetCSSRequest struct{}
 
 func NewGetCSSRequest() *GetCSSRequest {
 	return &GetCSSRequest{}
@@ -4008,8 +3984,7 @@ func (p *GetCSSResponse) String() string {
 	return fmt.Sprintf("GetCSSResponse(%+v)", *p)
 }
 
-type GetHtmlRequest struct {
-}
+type GetHtmlRequest struct{}
 
 func NewGetHtmlRequest() *GetHtmlRequest {
 	return &GetHtmlRequest{}
@@ -4047,8 +4022,7 @@ func (p *GetHtmlResponse) String() string {
 	return fmt.Sprintf("GetHtmlResponse(%+v)", *p)
 }
 
-type GetUserAgreementRequest struct {
-}
+type GetUserAgreementRequest struct{}
 
 func NewGetUserAgreementRequest() *GetUserAgreementRequest {
 	return &GetUserAgreementRequest{}
@@ -4087,8 +4061,7 @@ func (p *GetUserAgreementResponse) String() string {
 }
 
 // 学期列表
-type TermListRequest struct {
-}
+type TermListRequest struct{}
 
 func NewTermListRequest() *TermListRequest {
 	return &TermListRequest{}
@@ -4266,8 +4239,7 @@ func (p *GetNoticeResponse) String() string {
 	return fmt.Sprintf("GetNoticeResponse(%+v)", *p)
 }
 
-type GetContributorInfoRequest struct {
-}
+type GetContributorInfoRequest struct{}
 
 func NewGetContributorInfoRequest() *GetContributorInfoRequest {
 	return &GetContributorInfoRequest{}
@@ -4974,8 +4946,7 @@ func (p *DeleteToolboxConfigRequest) String() string {
 	return fmt.Sprintf("DeleteToolboxConfigRequest(%+v)", *p)
 }
 
-type DeleteToolboxConfigResponse struct {
-}
+type DeleteToolboxConfigResponse struct{}
 
 func NewDeleteToolboxConfigResponse() *DeleteToolboxConfigResponse {
 	return &DeleteToolboxConfigResponse{}

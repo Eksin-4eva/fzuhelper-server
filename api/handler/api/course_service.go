@@ -228,7 +228,7 @@ func UpsertCustomCourse(ctx context.Context, c *app.RequestContext) {
 
 	resp := new(api.UpsertCustomCourseResponse)
 	resp.Base = pack.BuildSuccessBase()
-	resp.CourseId = res.CourseId
+	resp.CourseID = res.CourseId
 	pack.RespData(c, resp)
 }
 
@@ -245,7 +245,7 @@ func DeleteCustomCourse(ctx context.Context, c *app.RequestContext) {
 
 	err = rpc.DeleteCustomCourseRPC(ctx, &course.DeleteCustomCourseRequest{
 		Term:     req.Term,
-		CourseId: req.CourseId,
+		CourseId: req.CourseID,
 	})
 	if err != nil {
 		pack.RespError(c, err)
