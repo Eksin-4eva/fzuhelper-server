@@ -96,34 +96,36 @@ func TestDBCourse_CreateCustomCourse(t *testing.T) {
 
 func TestDBCourse_CheckDuplicateCustomCourse(t *testing.T) {
 	type testCase struct {
-		name           string
-		mockError      error
-		mockCount      int64
-		expectingError bool
-		expectedResult bool
+		name             string
+		mockFirstError   error
+		expectingError   bool
+		expectedResult   bool
+		expectedCourseId string
 	}
+
+	const existingCourseId = "existing-uuid-123"
 
 	testCases := []testCase{
 		{
-			name:           "CheckDuplicateCustomCourse_Duplicate",
-			mockError:      nil,
-			mockCount:      1,
-			expectingError: false,
-			expectedResult: true,
+			name:             "CheckDuplicateCustomCourse_Duplicate",
+			mockFirstError:   nil,
+			expectingError:   false,
+			expectedResult:   true,
+			expectedCourseId: existingCourseId,
 		},
 		{
-			name:           "CheckDuplicateCustomCourse_NotDuplicate",
-			mockError:      nil,
-			mockCount:      0,
-			expectingError: false,
-			expectedResult: false,
+			name:             "CheckDuplicateCustomCourse_NotDuplicate",
+			mockFirstError:   gorm.ErrRecordNotFound,
+			expectingError:   false,
+			expectedResult:   false,
+			expectedCourseId: "",
 		},
 		{
-			name:           "CheckDuplicateCustomCourse_DBError",
-			mockError:      fmt.Errorf("db error"),
-			mockCount:      0,
-			expectingError: true,
-			expectedResult: false,
+			name:             "CheckDuplicateCustomCourse_DBError",
+			mockFirstError:   fmt.Errorf("db error"),
+			expectingError:   true,
+			expectedResult:   false,
+			expectedCourseId: "",
 		},
 	}
 
@@ -140,31 +142,40 @@ func TestDBCourse_CheckDuplicateCustomCourse(t *testing.T) {
 			mockey.Mock((*gorm.DB).Model).To(func(value interface{}) *gorm.DB {
 				return mockGormDB
 			}).Build()
+			mockey.Mock((*gorm.DB).Select).To(func(query interface{}, args ...interface{}) *gorm.DB {
+				return mockGormDB
+			}).Build()
 			mockey.Mock((*gorm.DB).Where).To(func(query interface{}, args ...interface{}) *gorm.DB {
 				return mockGormDB
 			}).Build()
-			mockey.Mock((*gorm.DB).Count).To(func(count *int64) *gorm.DB {
-				if tc.mockError != nil {
-					mockGormDB.Error = tc.mockError
+			mockey.Mock((*gorm.DB).First).To(func(dest interface{}, conds ...interface{}) *gorm.DB {
+				if tc.mockFirstError != nil {
+					mockGormDB.Error = tc.mockFirstError
 					return mockGormDB
 				}
-				*count = tc.mockCount
+				// 填充 CourseId
+				if v, ok := dest.(*model.UserCustomCourse); ok {
+					v.CourseId = existingCourseId
+				}
 				return mockGormDB
 			}).Build()
 
-			result, err := mockDBCourse.CheckDuplicateCustomCourse(
+			result, courseId, err := mockDBCourse.CheckDuplicateCustomCourse(
 				context.Background(),
 				"222200311", "202401",
 				"自习", "图书馆",
 				1, 2, 1, 16, 1,
+				false, false,
 			)
 
 			if tc.expectingError {
 				assert.Error(t, err)
 				assert.False(t, result)
+				assert.Empty(t, courseId)
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.expectedResult, result)
+				assert.Equal(t, tc.expectedCourseId, courseId)
 			}
 		})
 	}

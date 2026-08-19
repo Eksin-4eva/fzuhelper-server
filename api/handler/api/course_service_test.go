@@ -66,7 +66,7 @@ func TestGetCourseList(t *testing.T) {
 			name:           "success no custom courses (v1 must not emit custom_courses)",
 			url:            "/api/v1/jwch/course/list?term=202401",
 			mockResp:       &course.CourseListResponse{Data: []*model.Course{}},
-			expectContains: `"code":"10000","message":"Success","data":{"base":{"code":10000,"msg":"Success"},"data":[]}`,
+			expectContains: `"code":"10000","message":"ok","data":[]`,
 			expectAbsence:  `custom_courses`,
 		},
 		{
@@ -78,7 +78,7 @@ func TestGetCourseList(t *testing.T) {
 					{Name: "x", Location: "y", StartClass: 1, EndClass: 2, StartWeek: 1, EndWeek: 2, Weekday: 1},
 				},
 			},
-			expectContains: `"code":"10000","message":"Success","data":{"base":{"code":10000,"msg":"Success"},"data":[]}`,
+			expectContains: `"code":"10000","message":"ok","data":[]`,
 			expectAbsence:  `custom_courses`,
 		},
 		{

@@ -57,9 +57,8 @@ func GetCourseList(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp := new(api.CourseListResponse)
-	resp.Base = pack.BuildSuccessBase()
 	resp.Data = pack.BuildCourseList(res.Data)
-	pack.RespData(c, resp)
+	pack.RespList(c, resp.Data)
 }
 
 // GetTermList .
@@ -227,9 +226,8 @@ func UpsertCustomCourse(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp := new(api.UpsertCustomCourseResponse)
-	resp.Base = pack.BuildSuccessBase()
 	resp.CourseID = res.CourseId
-	pack.RespData(c, resp)
+	pack.RespList(c, resp)
 }
 
 // DeleteCustomCourse 删除自定义课程
@@ -252,9 +250,7 @@ func DeleteCustomCourse(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(api.DeleteCustomCourseResponse)
-	resp.Base = pack.BuildSuccessBase()
-	pack.RespData(c, resp)
+	pack.RespSuccess(c)
 }
 
 // GetCourseListV2 .

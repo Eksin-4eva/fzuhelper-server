@@ -120,90 +120,27 @@ func (s *CourseServiceImpl) UpsertCustomCourse(ctx context.Context, req *course.
 	courseItem := req.Course
 	courseId := courseItem.Id
 
-	// 如果 courseId 存在 -> 更新路径（提前返回以减少嵌套）
 	if courseId != nil && *courseId != "" {
-		old, err := dbClient.Course.GetCustomCourseByID(ctx, stuId, req.Term, *courseId)
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				resp.Base = base.BuildBaseResp(errno.CustomCourseNotFoundError)
-				return resp, nil
-			}
-			resp.Base = base.BuildBaseResp(err)
-			return resp, nil
-		}
-
-		// optional 字段：前端未传则用旧值兜底，避免被零值覆盖
-		teacher := old.Teacher
-		if courseItem.Teacher != nil {
-			teacher = *courseItem.Teacher
-		}
-		single := old.IsSingle
-		if courseItem.Single != nil {
-			single = *courseItem.Single
-		}
-		double_ := old.IsDouble
-		if courseItem.Double_ != nil {
-			double_ = *courseItem.Double_
-		}
-		color := old.Color
-		if courseItem.Color != nil {
-			color = *courseItem.Color
-		}
-		remark := old.Remark
-		if courseItem.Remark != nil {
-			remark = *courseItem.Remark
-		}
-
-		// 全字段 PUT 覆盖（合并后的完整数据）
-		updates := map[string]interface{}{
-			"name":        courseItem.Name,
-			"teacher":     teacher,
-			"location":    courseItem.Location,
-			"start_class": int(courseItem.StartClass),
-			"end_class":   int(courseItem.EndClass),
-			"start_week":  int(courseItem.StartWeek),
-			"end_week":    int(courseItem.EndWeek),
-			"weekday":     int(courseItem.Weekday),
-			"is_single":   single,
-			"is_double":   double_,
-			"color":       color,
-			"remark":      remark,
-		}
-
-		rows, err := dbClient.Course.UpdateCustomCourse(ctx, stuId, req.Term, *courseId, updates)
-		if err != nil {
-			resp.Base = base.BuildBaseResp(err)
-			return resp, nil
-		}
-		if rows == 0 {
-			resp.Base = base.BuildBaseResp(errno.CustomCourseNotFoundError)
-			return resp, nil
-		}
-
-		resp.Base = base.BuildSuccessResp()
-		resp.CourseId = courseId
-		return resp, nil
+		return s.handleUpdateCustomCourse(ctx, stuId, req.Term, *courseId, courseItem)
 	}
 
-	// 创建路径（courseId 为 nil 或空）—— 现在处于更扁平的作用域中
-	isDuplicate, err := dbClient.Course.CheckDuplicateCustomCourse(ctx, stuId, req.Term,
+	isDuplicate, existingCourseId, err := dbClient.Course.CheckDuplicateCustomCourse(ctx, stuId, req.Term,
 		courseItem.Name, courseItem.Location,
 		int(courseItem.StartClass), int(courseItem.EndClass),
 		int(courseItem.StartWeek), int(courseItem.EndWeek),
-		int(courseItem.Weekday))
+		int(courseItem.Weekday),
+		getBoolValue(courseItem.Single), getBoolValue(courseItem.Double_))
 	if err != nil {
 		resp.Base = base.BuildBaseResp(err)
 		return resp, nil
 	}
 
 	if isDuplicate {
-		// 已存在相同课程，跳过（去重）
 		resp.Base = base.BuildSuccessResp()
-		resp.CourseId = nil
+		resp.CourseId = &existingCourseId
 		return resp, nil
 	}
 
-	// 服务端生成 courseId 并保存
 	newCourseId := uuid.New().String()
 	courseId = &newCourseId
 
@@ -232,6 +169,77 @@ func (s *CourseServiceImpl) UpsertCustomCourse(ctx context.Context, req *course.
 
 	resp.Base = base.BuildSuccessResp()
 	resp.CourseId = courseId
+	return resp, nil
+}
+
+// handleUpdateCustomCourse 处理自定义课程的更新逻辑，降低 UpsertCustomCourse 的 nestif 复杂度
+func (s *CourseServiceImpl) handleUpdateCustomCourse(
+	ctx context.Context,
+	stuId, term, courseId string,
+	courseItem *course.CustomCourseItem,
+) (*course.UpsertCustomCourseResponse, error) {
+	resp := course.NewUpsertCustomCourseResponse()
+	dbClient := s.ClientSet.DBClient
+
+	old, err := dbClient.Course.GetCustomCourseByID(ctx, stuId, term, courseId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			resp.Base = base.BuildBaseResp(errno.CustomCourseNotFoundError)
+			return resp, nil
+		}
+		resp.Base = base.BuildBaseResp(err)
+		return resp, nil
+	}
+
+	// optional 字段：前端未传则用旧值兜底，避免被零值覆盖
+	teacher := old.Teacher
+	if courseItem.Teacher != nil {
+		teacher = *courseItem.Teacher
+	}
+	single := old.IsSingle
+	if courseItem.Single != nil {
+		single = *courseItem.Single
+	}
+	double_ := old.IsDouble
+	if courseItem.Double_ != nil {
+		double_ = *courseItem.Double_
+	}
+	color := old.Color
+	if courseItem.Color != nil {
+		color = *courseItem.Color
+	}
+	remark := old.Remark
+	if courseItem.Remark != nil {
+		remark = *courseItem.Remark
+	}
+
+	updates := map[string]interface{}{
+		"name":        courseItem.Name,
+		"teacher":     teacher,
+		"location":    courseItem.Location,
+		"start_class": int(courseItem.StartClass),
+		"end_class":   int(courseItem.EndClass),
+		"start_week":  int(courseItem.StartWeek),
+		"end_week":    int(courseItem.EndWeek),
+		"weekday":     int(courseItem.Weekday),
+		"is_single":   single,
+		"is_double":   double_,
+		"color":       color,
+		"remark":      remark,
+	}
+
+	rows, err := dbClient.Course.UpdateCustomCourse(ctx, stuId, term, courseId, updates)
+	if err != nil {
+		resp.Base = base.BuildBaseResp(err)
+		return resp, nil
+	}
+	if rows == 0 {
+		resp.Base = base.BuildBaseResp(errno.CustomCourseNotFoundError)
+		return resp, nil
+	}
+
+	resp.Base = base.BuildSuccessResp()
+	resp.CourseId = &courseId
 	return resp, nil
 }
 
