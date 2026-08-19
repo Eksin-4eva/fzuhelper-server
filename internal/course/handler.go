@@ -120,52 +120,8 @@ func (s *CourseServiceImpl) UpsertCustomCourse(ctx context.Context, req *course.
 	courseItem := req.Course
 	courseId := courseItem.Id
 
-	if courseId == nil || *courseId == "" {
-		// 新增：先检查是否已存在相同课程（多端去重）
-		isDuplicate, err := dbClient.Course.CheckDuplicateCustomCourse(ctx, stuId, req.Term,
-			courseItem.Name, courseItem.Location,
-			int(courseItem.StartClass), int(courseItem.EndClass),
-			int(courseItem.StartWeek), int(courseItem.EndWeek),
-			int(courseItem.Weekday))
-		if err != nil {
-			resp.Base = base.BuildBaseResp(err)
-			return resp, nil
-		}
-
-		if isDuplicate {
-			// 已存在相同课程，跳过（去重）
-			resp.Base = base.BuildSuccessResp()
-			resp.CourseId = nil
-			return resp, nil
-		}
-
-		// 服务端生成 courseId 并保存
-		newCourseId := uuid.New().String()
-		courseId = &newCourseId
-
-		customCourse := &dbModel.UserCustomCourse{
-			StuId:      stuId,
-			Term:       req.Term,
-			CourseId:   newCourseId,
-			Name:       courseItem.Name,
-			Teacher:    getStringValue(courseItem.Teacher),
-			Location:   courseItem.Location,
-			StartClass: int(courseItem.StartClass),
-			EndClass:   int(courseItem.EndClass),
-			StartWeek:  int(courseItem.StartWeek),
-			EndWeek:    int(courseItem.EndWeek),
-			Weekday:    int(courseItem.Weekday),
-			IsSingle:   getBoolValue(courseItem.Single),
-			IsDouble:   getBoolValue(courseItem.Double_),
-			Color:      getStringValueWithDefault(courseItem.Color, "#FF5733"),
-			Remark:     getStringValue(courseItem.Remark),
-		}
-
-		if err := dbClient.Course.CreateCustomCourse(ctx, customCourse); err != nil {
-			resp.Base = base.BuildBaseResp(err)
-			return resp, nil
-		}
-	} else {
+	// 如果 courseId 存在 -> 更新路径（提前返回以减少嵌套）
+	if courseId != nil && *courseId != "" {
 		old, err := dbClient.Course.GetCustomCourseByID(ctx, stuId, req.Term, *courseId)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -223,6 +179,55 @@ func (s *CourseServiceImpl) UpsertCustomCourse(ctx context.Context, req *course.
 			resp.Base = base.BuildBaseResp(errno.CustomCourseNotFoundError)
 			return resp, nil
 		}
+
+		resp.Base = base.BuildSuccessResp()
+		resp.CourseId = courseId
+		return resp, nil
+	}
+
+	// 创建路径（courseId 为 nil 或空）—— 现在处于更扁平的作用域中
+	isDuplicate, err := dbClient.Course.CheckDuplicateCustomCourse(ctx, stuId, req.Term,
+		courseItem.Name, courseItem.Location,
+		int(courseItem.StartClass), int(courseItem.EndClass),
+		int(courseItem.StartWeek), int(courseItem.EndWeek),
+		int(courseItem.Weekday))
+	if err != nil {
+		resp.Base = base.BuildBaseResp(err)
+		return resp, nil
+	}
+
+	if isDuplicate {
+		// 已存在相同课程，跳过（去重）
+		resp.Base = base.BuildSuccessResp()
+		resp.CourseId = nil
+		return resp, nil
+	}
+
+	// 服务端生成 courseId 并保存
+	newCourseId := uuid.New().String()
+	courseId = &newCourseId
+
+	customCourse := &dbModel.UserCustomCourse{
+		StuId:      stuId,
+		Term:       req.Term,
+		CourseId:   newCourseId,
+		Name:       courseItem.Name,
+		Teacher:    getStringValue(courseItem.Teacher),
+		Location:   courseItem.Location,
+		StartClass: int(courseItem.StartClass),
+		EndClass:   int(courseItem.EndClass),
+		StartWeek:  int(courseItem.StartWeek),
+		EndWeek:    int(courseItem.EndWeek),
+		Weekday:    int(courseItem.Weekday),
+		IsSingle:   getBoolValue(courseItem.Single),
+		IsDouble:   getBoolValue(courseItem.Double_),
+		Color:      getStringValueWithDefault(courseItem.Color, "#FF5733"),
+		Remark:     getStringValue(courseItem.Remark),
+	}
+
+	if err := dbClient.Course.CreateCustomCourse(ctx, customCourse); err != nil {
+		resp.Base = base.BuildBaseResp(err)
+		return resp, nil
 	}
 
 	resp.Base = base.BuildSuccessResp()
