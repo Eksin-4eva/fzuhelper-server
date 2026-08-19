@@ -1,4 +1,4 @@
-/*
+﻿/*
 Copyright 2024 The west2-online Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,7 +55,6 @@ const (
 	BizFileUploadErrorCode        = 40006 // 文件上传错误(service 层)
 	BizJwchCookieExceptionCode    = 40007 // jwch cookie异常
 	BizJwchEvaluationNotFoundCode = 40008 // jwch 未进行评测
-	BizCustomCourseNotExistCode   = 40009 // 自定义课程不存在
 
 	InternalServiceErrorCode   = 50001 // 未知服务错误
 	InternalDatabaseErrorCode  = 50002 // 数据库错误
