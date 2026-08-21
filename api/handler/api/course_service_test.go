@@ -220,16 +220,20 @@ func TestUpsertCustomCourse(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			name:           "success",
-			url:            "/api/v2/jwch/course/upsert",
-			body:           `{"term":"202401","course":{"name":"x","location":"y","start_class":1,"end_class":2,"start_week":1,"end_week":2,"weekday":1}}`,
+			name: "success",
+			url:  "/api/v2/jwch/course/upsert",
+			body: `{"term":"202401","course":` +
+				`{"name":"x","location":"y","start_class":1,"end_class":2,` +
+				`"start_week":1,"end_week":2,"weekday":1,"single":false,"double_":false}}`,
 			mockResp:       &course.UpsertCustomCourseResponse{},
 			expectContains: `{"code":"10000","message":"ok","data":`,
 		},
 		{
-			name:           "rpc error",
-			url:            "/api/v2/jwch/course/upsert",
-			body:           `{"term":"202401","course":{"name":"x","location":"y","start_class":1,"end_class":2,"start_week":1,"end_week":2,"weekday":1}}`,
+			name: "rpc error",
+			url:  "/api/v2/jwch/course/upsert",
+			body: `{"term":"202401","course":` +
+				`{"name":"x","location":"y","start_class":1,"end_class":2,` +
+				`"start_week":1,"end_week":2,"weekday":1,"single":false,"double_":false}}`,
 			mockErr:        errno.InternalServiceError,
 			expectContains: `{"code":"50001","message":"内部服务错误"}`,
 		},
