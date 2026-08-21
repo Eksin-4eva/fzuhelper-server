@@ -41,7 +41,6 @@ func TestDBCourse_GetCustomCourses(t *testing.T) {
 
 	expectedCourses := []*model.UserCustomCourse{
 		{
-			ID:         1,
 			StuId:      "222200311",
 			Term:       "202401",
 			CourseId:   "uuid-1",
@@ -54,7 +53,6 @@ func TestDBCourse_GetCustomCourses(t *testing.T) {
 			Weekday:    1,
 		},
 		{
-			ID:         2,
 			StuId:      "222200311",
 			Term:       "202401",
 			CourseId:   "uuid-2",
@@ -145,7 +143,6 @@ func TestDBCourse_GetCustomCourseByID(t *testing.T) {
 	}
 
 	expectedCourse := &model.UserCustomCourse{
-		ID:         1,
 		StuId:      "222200311",
 		Term:       "202401",
 		CourseId:   "uuid-1",

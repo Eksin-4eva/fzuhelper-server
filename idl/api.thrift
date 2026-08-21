@@ -175,7 +175,6 @@ service UserService {
 ## ----------------------------------------------------------------------------
 ## course 课表
 ## ----------------------------------------------------------------------------
-// 自定义课程项
 struct CustomCourseItem {
     1: optional string id
     2: required string name
@@ -186,8 +185,8 @@ struct CustomCourseItem {
     7: required i32 start_week
     8: required i32 end_week
     9: required i32 weekday
-    10: optional bool single
-    11: optional bool double_
+    10: required bool single
+    11: required bool double_
     12: optional string color
     13: optional string remark
 }
@@ -273,7 +272,6 @@ struct UpdateAdjustCourseResponse {
     1: required model.BaseResp base
 }
 
-// 新增或更新自定义课程
 struct UpsertCustomCourseRequest {
     1: required string term
     2: required CustomCourseItem course
@@ -284,7 +282,6 @@ struct UpsertCustomCourseResponse {
     2: optional string course_id
 }
 
-// 删除自定义课程
 struct DeleteCustomCourseRequest {
     1: required string term
     2: required string course_id
@@ -298,7 +295,7 @@ service CourseService {
     // 获取课表
     CourseListResponse GetCourseList(1: CourseListRequest req)(api.get="/api/v1/jwch/course/list")
     // 获取课表 V2（响应始终包含 custom_courses）
-    CourseListV2Response GetCourseListV2(1: CourseListV2Request req)(api.get="/api/v2/jwch/course/list")
+    CourseListV2Response GetCourseListV2(1: CourseListV2Request req)(api.get="/api/v2/course/list")
     // 获取学期
     CourseTermListResponse GetTermList(1: CourseTermListRequest req)(api.get="/api/v1/jwch/term/list")
     // 获取日历订阅 token

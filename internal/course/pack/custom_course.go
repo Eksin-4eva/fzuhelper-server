@@ -38,8 +38,8 @@ func BuildCustomCourseItems(courses []*dbModel.UserCustomCourse) []*courseKitex.
 		if c.Teacher != "" {
 			item.Teacher = &c.Teacher
 		}
-		item.Single = &c.IsSingle
-		item.Double_ = &c.IsDouble
+		item.Single = c.IsSingle
+		item.Double_ = c.IsDouble
 		if c.Color != "" {
 			item.Color = &c.Color
 		}

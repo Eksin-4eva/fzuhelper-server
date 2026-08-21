@@ -55,7 +55,7 @@ func TestGetCourseList(t *testing.T) {
 	type testCase struct {
 		name           string
 		url            string
-		mockResp       []*model.Course
+		mockResp       *course.CourseListResponse
 		mockErr        error
 		expectContains string
 	}
@@ -64,7 +64,7 @@ func TestGetCourseList(t *testing.T) {
 		{
 			name:           "success",
 			url:            "/api/v1/jwch/course/list?term=202401",
-			mockResp:       []*model.Course{},
+			mockResp:       &course.CourseListResponse{Data: []*model.Course{}},
 			expectContains: `{"code":"10000","message":"ok","data":[]}`,
 		},
 		{
@@ -86,7 +86,7 @@ func TestGetCourseList(t *testing.T) {
 	defer mockey.UnPatchAll()
 	for _, tc := range testCases {
 		mockey.PatchConvey(tc.name, t, func() {
-			mockey.Mock(rpc.GetCourseListRPC).To(func(ctx context.Context, req *course.CourseListRequest) ([]*model.Course, error) {
+			mockey.Mock(rpc.GetCourseListRPC).To(func(ctx context.Context, req *course.CourseListRequest) (*course.CourseListResponse, error) {
 				return tc.mockResp, tc.mockErr
 			}).Build()
 
@@ -110,13 +110,13 @@ func TestGetCourseListV2(t *testing.T) {
 	testCases := []testCase{
 		{
 			name:           "success",
-			url:            "/api/v2/jwch/course/list?term=202401",
+			url:            "/api/v2/course/list?term=202401",
 			mockResp:       &course.CourseListResponse{Data: []*model.Course{}},
 			expectContains: `{"code":"10000","message":"ok","data":{"base":null,"data":[],"custom_courses":[]}}`,
 		},
 		{
 			name: "success",
-			url:  "/api/v2/jwch/course/list?term=202401",
+			url:  "/api/v2/course/list?term=202401",
 			mockResp: &course.CourseListResponse{
 				Data: []*model.Course{},
 				CustomCourses: []*course.CustomCourseItem{
@@ -127,19 +127,19 @@ func TestGetCourseListV2(t *testing.T) {
 		},
 		{
 			name:           "rpc error",
-			url:            "/api/v2/jwch/course/list?term=202401",
+			url:            "/api/v2/course/list?term=202401",
 			mockErr:        errno.InternalServiceError,
 			expectContains: `{"code":"50001","message":"内部服务错误"}`,
 		},
 		{
 			name:           "bind error",
-			url:            "/api/v2/jwch/course/list",
+			url:            "/api/v2/course/list",
 			expectContains: `{"code":"20001","message":"参数错误,`,
 		},
 	}
 
 	router := route.NewEngine(&config.Options{})
-	router.GET("/api/v2/jwch/course/list", GetCourseListV2)
+	router.GET("/api/v2/course/list", GetCourseListV2)
 
 	defer mockey.UnPatchAll()
 	for _, tc := range testCases {

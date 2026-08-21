@@ -69,12 +69,10 @@ type AutoAdjustCourse struct {
 	DeletedAt   gorm.DeletedAt `sql:"index"`
 }
 
-// UserCustomCourse 用户自定义课程表
 type UserCustomCourse struct {
-	ID         int64
-	StuId      string
-	Term       string
-	CourseId   string
+	StuId      string `gorm:"index:idx_stu;uniqueIndex:uk_stu_term_course"`
+	Term       string `gorm:"index:idx_term;uniqueIndex:uk_stu_term_course"`
+	CourseId   string `gorm:"primaryKey;uniqueIndex:uk_stu_term_course"`
 	Name       string
 	Teacher    string
 	Location   string
@@ -89,7 +87,7 @@ type UserCustomCourse struct {
 	Remark     string
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
-	DeletedAt  gorm.DeletedAt `sql:"index"`
+	DeletedAt  gorm.DeletedAt `gorm:"index:idx_deleted" sql:"index"`
 }
 
 // TableName 指定表名

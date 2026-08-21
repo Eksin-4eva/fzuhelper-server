@@ -18,11 +18,7 @@ package course
 
 import (
 	"context"
-	"errors"
 	"fmt"
-
-	"github.com/google/uuid"
-	"gorm.io/gorm"
 
 	"github.com/west2-online/fzuhelper-server/internal/course/pack"
 	"github.com/west2-online/fzuhelper-server/internal/course/service"
@@ -31,8 +27,6 @@ import (
 	"github.com/west2-online/fzuhelper-server/pkg/base"
 	metainfoContext "github.com/west2-online/fzuhelper-server/pkg/base/context"
 	"github.com/west2-online/fzuhelper-server/pkg/constants"
-	dbModel "github.com/west2-online/fzuhelper-server/pkg/db/model"
-	"github.com/west2-online/fzuhelper-server/pkg/errno"
 	"github.com/west2-online/fzuhelper-server/pkg/logger"
 	"github.com/west2-online/fzuhelper-server/pkg/singleflight"
 	"github.com/west2-online/fzuhelper-server/pkg/taskqueue"
@@ -81,8 +75,7 @@ func (s *CourseServiceImpl) GetCourseList(ctx context.Context, req *course.Cours
 	resp.Base = base.BuildSuccessResp()
 	resp.Data = res
 
-	// 获取自定义课程（降级处理：获取失败不影响主流程）
-	customCourses, err := s.getCustomCourses(ctx, stuId, req.Term)
+	customCourses, err := service.NewCourseService(ctx, s.ClientSet, s.taskQueue).GetCustomCourses(ctx, stuId, req.Term)
 	if err != nil {
 		logger.WithCtx(ctx).Errorf("get custom courses failed (fallback to empty): %v", err)
 		resp.CustomCourses = nil
@@ -93,19 +86,6 @@ func (s *CourseServiceImpl) GetCourseList(ctx context.Context, req *course.Cours
 	return resp, nil
 }
 
-// getCustomCourses 获取自定义课程列表
-func (s *CourseServiceImpl) getCustomCourses(ctx context.Context, stuId, term string) ([]*course.CustomCourseItem, error) {
-	dbClient := s.ClientSet.DBClient
-	customCourses, err := dbClient.Course.GetCustomCourses(ctx, stuId, term)
-	if err != nil {
-		return nil, err
-	}
-
-	// 转换为 Thrift 类型
-	return pack.BuildCustomCourseItems(customCourses), nil
-}
-
-// UpsertCustomCourse 新增或更新自定义课程
 func (s *CourseServiceImpl) UpsertCustomCourse(ctx context.Context, req *course.UpsertCustomCourseRequest) (
 	resp *course.UpsertCustomCourseResponse, err error,
 ) {
@@ -115,135 +95,17 @@ func (s *CourseServiceImpl) UpsertCustomCourse(ctx context.Context, req *course.
 		return nil, fmt.Errorf("Course.UpsertCustomCourse: Get login data fail %w", err)
 	}
 	stuId := metainfoContext.ExtractIDFromLoginData(loginData)
-	dbClient := s.ClientSet.DBClient
-
-	courseItem := req.Course
-	courseId := courseItem.Id
-
-	if courseId != nil && *courseId != "" {
-		return s.handleUpdateCustomCourse(ctx, stuId, req.Term, *courseId, courseItem)
-	}
-
-	isDuplicate, existingCourseId, err := dbClient.Course.CheckDuplicateCustomCourse(ctx, stuId, req.Term,
-		courseItem.Name, courseItem.Location,
-		int(courseItem.StartClass), int(courseItem.EndClass),
-		int(courseItem.StartWeek), int(courseItem.EndWeek),
-		int(courseItem.Weekday),
-		getBoolValue(courseItem.Single), getBoolValue(courseItem.Double_))
+	courseID, err := service.NewCourseService(ctx, s.ClientSet, s.taskQueue).UpsertCustomCourse(ctx, stuId, req)
 	if err != nil {
-		resp.Base = base.BuildBaseResp(err)
-		return resp, nil
-	}
-
-	if isDuplicate {
-		resp.Base = base.BuildSuccessResp()
-		resp.CourseId = &existingCourseId
-		return resp, nil
-	}
-
-	newCourseId := uuid.New().String()
-	courseId = &newCourseId
-
-	customCourse := &dbModel.UserCustomCourse{
-		StuId:      stuId,
-		Term:       req.Term,
-		CourseId:   newCourseId,
-		Name:       courseItem.Name,
-		Teacher:    getStringValue(courseItem.Teacher),
-		Location:   courseItem.Location,
-		StartClass: int(courseItem.StartClass),
-		EndClass:   int(courseItem.EndClass),
-		StartWeek:  int(courseItem.StartWeek),
-		EndWeek:    int(courseItem.EndWeek),
-		Weekday:    int(courseItem.Weekday),
-		IsSingle:   getBoolValue(courseItem.Single),
-		IsDouble:   getBoolValue(courseItem.Double_),
-		Color:      getStringValueWithDefault(courseItem.Color, "#FF5733"),
-		Remark:     getStringValue(courseItem.Remark),
-	}
-
-	if err := dbClient.Course.CreateCustomCourse(ctx, customCourse); err != nil {
 		resp.Base = base.BuildBaseResp(err)
 		return resp, nil
 	}
 
 	resp.Base = base.BuildSuccessResp()
-	resp.CourseId = courseId
+	resp.CourseId = &courseID
 	return resp, nil
 }
 
-// handleUpdateCustomCourse 处理自定义课程的更新逻辑，降低 UpsertCustomCourse 的 nestif 复杂度
-func (s *CourseServiceImpl) handleUpdateCustomCourse(
-	ctx context.Context,
-	stuId, term, courseId string,
-	courseItem *course.CustomCourseItem,
-) (*course.UpsertCustomCourseResponse, error) {
-	resp := course.NewUpsertCustomCourseResponse()
-	dbClient := s.ClientSet.DBClient
-
-	old, err := dbClient.Course.GetCustomCourseByID(ctx, stuId, term, courseId)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			resp.Base = base.BuildBaseResp(errno.CustomCourseNotFoundError)
-			return resp, nil
-		}
-		resp.Base = base.BuildBaseResp(err)
-		return resp, nil
-	}
-
-	// optional 字段：前端未传则用旧值兜底，避免被零值覆盖
-	teacher := old.Teacher
-	if courseItem.Teacher != nil {
-		teacher = *courseItem.Teacher
-	}
-	single := old.IsSingle
-	if courseItem.Single != nil {
-		single = *courseItem.Single
-	}
-	double_ := old.IsDouble
-	if courseItem.Double_ != nil {
-		double_ = *courseItem.Double_
-	}
-	color := old.Color
-	if courseItem.Color != nil {
-		color = *courseItem.Color
-	}
-	remark := old.Remark
-	if courseItem.Remark != nil {
-		remark = *courseItem.Remark
-	}
-
-	updates := map[string]interface{}{
-		"name":        courseItem.Name,
-		"teacher":     teacher,
-		"location":    courseItem.Location,
-		"start_class": int(courseItem.StartClass),
-		"end_class":   int(courseItem.EndClass),
-		"start_week":  int(courseItem.StartWeek),
-		"end_week":    int(courseItem.EndWeek),
-		"weekday":     int(courseItem.Weekday),
-		"is_single":   single,
-		"is_double":   double_,
-		"color":       color,
-		"remark":      remark,
-	}
-
-	rows, err := dbClient.Course.UpdateCustomCourse(ctx, stuId, term, courseId, updates)
-	if err != nil {
-		resp.Base = base.BuildBaseResp(err)
-		return resp, nil
-	}
-	if rows == 0 {
-		resp.Base = base.BuildBaseResp(errno.CustomCourseNotFoundError)
-		return resp, nil
-	}
-
-	resp.Base = base.BuildSuccessResp()
-	resp.CourseId = &courseId
-	return resp, nil
-}
-
-// DeleteCustomCourse 删除自定义课程
 func (s *CourseServiceImpl) DeleteCustomCourse(ctx context.Context, req *course.DeleteCustomCourseRequest) (
 	resp *course.DeleteCustomCourseResponse, err error,
 ) {
@@ -253,44 +115,9 @@ func (s *CourseServiceImpl) DeleteCustomCourse(ctx context.Context, req *course.
 		return nil, fmt.Errorf("Course.DeleteCustomCourse: Get login data fail %w", err)
 	}
 	stuId := metainfoContext.ExtractIDFromLoginData(loginData)
-	dbClient := s.ClientSet.DBClient
-
-	rows, err := dbClient.Course.DeleteCustomCourse(ctx, stuId, req.Term, req.CourseId)
-	if err != nil {
-		resp.Base = base.BuildBaseResp(errno.InternalServiceError.WithError(err))
-		return resp, nil
-	}
-	if rows == 0 {
-		resp.Base = base.BuildBaseResp(errno.CustomCourseNotFoundError)
-		return resp, nil
-	}
-
-	resp.Base = base.BuildSuccessResp()
+	err = service.NewCourseService(ctx, s.ClientSet, s.taskQueue).DeleteCustomCourse(ctx, stuId, req)
+	resp.Base = base.BuildBaseResp(err)
 	return resp, nil
-}
-
-// 辅助函数：获取字符串值
-func getStringValue(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
-}
-
-// 辅助函数：获取字符串值，带默认值
-func getStringValueWithDefault(s *string, defaultVal string) string {
-	if s == nil || *s == "" {
-		return defaultVal
-	}
-	return *s
-}
-
-// 辅助函数：获取布尔值
-func getBoolValue(b *bool) bool {
-	if b == nil {
-		return false
-	}
-	return *b
 }
 
 func (s *CourseServiceImpl) GetTermList(ctx context.Context, req *course.TermListRequest) (resp *course.TermListResponse, err error) {

@@ -65,9 +65,6 @@ struct UpdateAdjustCourseResponse {
     1: required model.BaseResp base
 }
 
-// ====== 自定义课程 ======
-
-// 自定义课程项（用于传输）
 struct CustomCourseItem {
     1: optional string id
     2: required string name
@@ -78,36 +75,30 @@ struct CustomCourseItem {
     7: required i32 startWeek
     8: required i32 endWeek
     9: required i32 weekday
-    10: optional bool single
-    11: optional bool double_
+    10: required bool single
+    11: required bool double_
     12: optional string color
     13: optional string remark
 }
 
-// Upsert 自定义课程请求（新增或更新）
 struct UpsertCustomCourseRequest {
     1: required string term
     2: required CustomCourseItem course
 }
 
-// Upsert 自定义课程响应
 struct UpsertCustomCourseResponse {
     1: required model.BaseResp base
     2: optional string courseId
 }
 
-// 删除自定义课程请求
 struct DeleteCustomCourseRequest {
     1: required string term
     2: required string courseId
 }
 
-// 删除自定义课程响应
 struct DeleteCustomCourseResponse {
     1: required model.BaseResp base
 }
-
-// ====== END 自定义课程 ======
 
 service CourseService {
     CourseListResponse GetCourseList(1: CourseListRequest req)
