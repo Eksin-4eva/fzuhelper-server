@@ -171,21 +171,27 @@ func TestDeleteCustomCourse(t *testing.T) {
 	testCases := []testCase{
 		{
 			name:           "success",
-			url:            "/api/v2/jwch/course/custom",
+			url:            "/api/v1/course/custom",
 			body:           `{"term":"202401","course_id":"114514"}`,
 			expectContains: `{"code":"10000","message":"ok"}`,
 		},
 		{
 			name:           "rpc error",
-			url:            "/api/v2/jwch/course/custom",
+			url:            "/api/v1/course/custom",
 			body:           `{"term":"202401","course_id":"114514"}`,
 			mockErr:        errno.InternalServiceError,
 			expectContains: `{"code":"50001","message":"内部服务错误"}`,
 		},
+		{
+			name:           "bind error",
+			url:            "/api/v1/course/custom",
+			body:           `{"course_id":"114514"}`,
+			expectContains: `{"code":"20001","message":"参数错误,`,
+		},
 	}
 
 	router := route.NewEngine(&config.Options{})
-	router.DELETE("/api/v2/jwch/course/custom", DeleteCustomCourse)
+	router.DELETE("/api/v1/course/custom", DeleteCustomCourse)
 
 	defer mockey.UnPatchAll()
 	for _, tc := range testCases {
@@ -221,7 +227,7 @@ func TestUpsertCustomCourse(t *testing.T) {
 	testCases := []testCase{
 		{
 			name: "success",
-			url:  "/api/v2/jwch/course/upsert",
+			url:  "/api/v1/course/custom",
 			body: `{"term":"202401","course":` +
 				`{"name":"x","location":"y","start_class":1,"end_class":2,` +
 				`"start_week":1,"end_week":2,"weekday":1,"single":false,"double_":false}}`,
@@ -230,17 +236,29 @@ func TestUpsertCustomCourse(t *testing.T) {
 		},
 		{
 			name: "rpc error",
-			url:  "/api/v2/jwch/course/upsert",
+			url:  "/api/v1/course/custom",
 			body: `{"term":"202401","course":` +
 				`{"name":"x","location":"y","start_class":1,"end_class":2,` +
 				`"start_week":1,"end_week":2,"weekday":1,"single":false,"double_":false}}`,
 			mockErr:        errno.InternalServiceError,
 			expectContains: `{"code":"50001","message":"内部服务错误"}`,
 		},
+		{
+			name:           "missing course rejected at bind",
+			url:            "/api/v1/course/custom",
+			body:           `{"term":"202401"}`,
+			expectContains: `{"code":"20001","message":"参数错误,`,
+		},
+		{
+			name:           "bind error",
+			url:            "/api/v1/course/custom",
+			body:           `{"term":"202401","course":{"name":"x"}}`,
+			expectContains: `{"code":"20001","message":"参数错误,`,
+		},
 	}
 
 	router := route.NewEngine(&config.Options{})
-	router.POST("/api/v2/jwch/course/upsert", UpsertCustomCourse)
+	router.POST("/api/v1/course/custom", UpsertCustomCourse)
 
 	defer mockey.UnPatchAll()
 	for _, tc := range testCases {
@@ -261,6 +279,32 @@ func TestUpsertCustomCourse(t *testing.T) {
 			assert.Contains(t, string(res.Result().Body()), tc.expectContains)
 		})
 	}
+}
+
+func TestUpsertCustomCourseCourseNil(t *testing.T) {
+	router := route.NewEngine(&config.Options{})
+	router.POST("/api/v1/course/custom", UpsertCustomCourse)
+
+	defer mockey.UnPatchAll()
+	mockey.PatchConvey("course nil reaches nil check", t, func() {
+		// 绕过 hertz 的 required 校验，使 req.Course 保持 nil，覆盖 handler 中的防御性检查
+		mockey.Mock((*app.RequestContext).BindAndValidate).To(
+			func(c *app.RequestContext, req interface{}) error {
+				return nil
+			},
+		).Build()
+
+		body := &ut.Body{
+			Body: bytes.NewBufferString(`{"term":"202401"}`),
+			Len:  len(`{"term":"202401"}`),
+		}
+		res := ut.PerformRequest(router, consts.MethodPost, "/api/v1/course/custom", body, ut.Header{
+			Key:   "Content-Type",
+			Value: "application/json",
+		})
+		assert.Equal(t, consts.StatusOK, res.Result().StatusCode())
+		assert.Contains(t, string(res.Result().Body()), `{"code":"20001","message":"参数错误"}`)
+	})
 }
 
 func TestGetTermList(t *testing.T) {
