@@ -146,16 +146,13 @@ func TestUpsertCustomCourse(t *testing.T) {
 	}
 
 	type testCase struct {
-		name           string
-		item           *course.CustomCourseItem
-		updateID       string
-		updateErr      error
-		checkDuplicate bool
-		existingID     string
-		checkErr       error
-		createErr      error
-		expectErr      string
-		expectCreated  *dbmodel.UserCustomCourse
+		name          string
+		item          *course.CustomCourseItem
+		updateID      string
+		updateErr     error
+		createErr     error
+		expectErr     string
+		expectCreated *dbmodel.UserCustomCourse
 	}
 
 	testCases := []testCase{
@@ -169,18 +166,6 @@ func TestUpsertCustomCourse(t *testing.T) {
 			item:      itemWithID,
 			updateErr: assert.AnError,
 			expectErr: "assert.AnError",
-		},
-		{
-			name:      "UpsertCustomCourseDuplicateCheckError",
-			item:      baseItem,
-			checkErr:  assert.AnError,
-			expectErr: "assert.AnError",
-		},
-		{
-			name:           "UpsertCustomCourseDuplicateReturnExistingID",
-			item:           baseItem,
-			checkDuplicate: true,
-			existingID:     "existing-uuid",
 		},
 		{
 			name: "UpsertCustomCourseCreateSuccess",
@@ -249,8 +234,6 @@ func TestUpsertCustomCourse(t *testing.T) {
 			if tc.item.Id != nil && *tc.item.Id != "" {
 				mockey.Mock((*CourseService).updateCustomCourse).Return(tc.updateID, tc.updateErr).Build()
 			} else {
-				mockey.Mock((*dbcourse.DBCourse).CheckDuplicateCustomCourse).
-					Return(tc.checkDuplicate, tc.existingID, tc.checkErr).Build()
 				mockey.Mock((*dbcourse.DBCourse).CreateCustomCourse).To(
 					func(_ context.Context, course *dbmodel.UserCustomCourse) error {
 						created = course
@@ -270,11 +253,6 @@ func TestUpsertCustomCourse(t *testing.T) {
 
 			if tc.item.Id != nil && *tc.item.Id != "" {
 				assert.Equal(t, tc.updateID, res)
-				assert.Nil(t, created)
-				return
-			}
-			if tc.checkDuplicate {
-				assert.Equal(t, tc.existingID, res)
 				assert.Nil(t, created)
 				return
 			}

@@ -112,7 +112,7 @@ func TestGetCourseListV2(t *testing.T) {
 			name:           "success",
 			url:            "/api/v2/course/list?term=202401",
 			mockResp:       &course.CourseListResponse{Data: []*model.Course{}},
-			expectContains: `{"code":"10000","message":"ok","data":{"base":null,"data":[],"custom_courses":[]}}`,
+			expectContains: `{"code":"10000","message":"ok","data":{"base":{"code":10000,"msg":"Success"},"data":[],"custom_courses":[]}}`,
 		},
 		{
 			name: "success",

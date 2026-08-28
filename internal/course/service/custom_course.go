@@ -43,18 +43,6 @@ func (s *CourseService) UpsertCustomCourse(ctx context.Context, stuID string, re
 		return s.updateCustomCourse(ctx, stuID, req.Term, *item.Id, item)
 	}
 
-	isDuplicate, existingID, err := s.db.Course.CheckDuplicateCustomCourse(ctx, stuID, req.Term,
-		item.Name, item.Location,
-		int(item.StartClass), int(item.EndClass),
-		int(item.StartWeek), int(item.EndWeek),
-		int(item.Weekday), item.Single, item.Double_)
-	if err != nil {
-		return "", err
-	}
-	if isDuplicate {
-		return existingID, nil
-	}
-
 	courseID := uuid.New().String()
 	customCourse := &model.UserCustomCourse{
 		StuId:      stuID,

@@ -245,7 +245,7 @@ CREATE TABLE `fzu-helper`.`user_custom_courses` (
     `updated_at`  datetime     NULL DEFAULT current_timestamp ON UPDATE current_timestamp,
     `deleted_at`  datetime     NULL DEFAULT NULL,
     PRIMARY KEY (`course_id`),
-    UNIQUE KEY `uk_stu_term_course` (`stu_id`, `term`, `course_id`),
+    UNIQUE KEY `uk_custom_course_content` (`name`, `teacher`, `location`, `start_class`, `end_class`, `start_week`, `end_week`, `weekday`, `is_single`, `is_double`),
     INDEX `idx_stu` (`stu_id`),
     INDEX `idx_term` (`term`),
     INDEX `idx_deleted` (`deleted_at`)

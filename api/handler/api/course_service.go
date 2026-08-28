@@ -276,6 +276,7 @@ func GetCourseListV2(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp := new(api.CourseListV2Response)
+	resp.Base = pack.BuildSuccessBase()
 	resp.Data = pack.BuildCourseList(res.Data)
 	resp.CustomCourses = pack.BuildCustomCourseItemList(res.CustomCourses)
 	pack.RespList(c, resp)
