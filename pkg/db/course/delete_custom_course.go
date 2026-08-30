@@ -22,9 +22,11 @@ import (
 	"github.com/west2-online/fzuhelper-server/pkg/db/model"
 )
 
-// DeleteCustomCourse 删除自定义课程（软删除），返回受影响的行数
+// DeleteCustomCourse 删除自定义课程（物理删除），返回受影响的行数
+// 使用物理删除以配合内容字段唯一键：软删除的行仍占用唯一索引，会导致「删除后重建同内容课程」触发 Duplicate entry
 func (c *DBCourse) DeleteCustomCourse(ctx context.Context, stuId, term, courseId string) (int64, error) {
 	result := c.client.WithContext(ctx).
+		Unscoped().
 		Where("stu_id = ? AND term = ? AND course_id = ?", stuId, term, courseId).
 		Delete(&model.UserCustomCourse{})
 	return result.RowsAffected, result.Error

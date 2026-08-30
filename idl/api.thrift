@@ -295,7 +295,7 @@ service CourseService {
     // 获取课表
     CourseListResponse GetCourseList(1: CourseListRequest req)(api.get="/api/v1/jwch/course/list")
     // 获取课表 V2（响应始终包含 custom_courses）
-    CourseListV2Response GetCourseListV2(1: CourseListV2Request req)(api.get="/api/v2/course/list")
+    CourseListV2Response GetCourseListV2(1: CourseListV2Request req)(api.get="/api/v2/jwch/course/list")
     // 获取学期
     CourseTermListResponse GetTermList(1: CourseTermListRequest req)(api.get="/api/v1/jwch/term/list")
     // 获取日历订阅 token

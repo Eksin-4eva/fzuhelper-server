@@ -254,7 +254,7 @@ func DeleteCustomCourse(ctx context.Context, c *app.RequestContext) {
 }
 
 // GetCourseListV2 .
-// @router /api/v2/course/list [GET]
+// @router /api/v2/jwch/course/list [GET]
 func GetCourseListV2(ctx context.Context, c *app.RequestContext) {
 	var req api.CourseListV2Request
 	var err error
