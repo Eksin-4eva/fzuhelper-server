@@ -230,7 +230,7 @@ CREATE TABLE `fzu-helper`.`user_custom_courses` (
     `term`        varchar(20)  NOT NULL COMMENT '学期',
     `course_id`   varchar(64)  NOT NULL COMMENT '课程唯一ID(UUID)',
     `name`        varchar(100) NOT NULL COMMENT '课程名称',
-    `teacher`     varchar(50)  NULL DEFAULT '' COMMENT '教师',
+    `teacher`     varchar(50)  NOT NULL DEFAULT '' COMMENT '教师',
     `location`    varchar(100) NOT NULL COMMENT '上课地点',
     `start_class` int          NOT NULL COMMENT '开始节次',
     `end_class`   int          NOT NULL COMMENT '结束节次',

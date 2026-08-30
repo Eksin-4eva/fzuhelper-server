@@ -22,7 +22,6 @@ import (
 
 	"github.com/bytedance/mockey"
 	"github.com/stretchr/testify/assert"
-	"gorm.io/gorm"
 
 	"github.com/west2-online/fzuhelper-server/internal/course/pack"
 	"github.com/west2-online/fzuhelper-server/kitex_gen/course"
@@ -153,8 +152,6 @@ func TestUpsertCustomCourse(t *testing.T) {
 		existingID    string
 		existingErr   error
 		createErr     error
-		conflictID    string
-		conflictErr   error
 		expectErr     string
 		expectID      string
 		expectCreated *dbmodel.UserCustomCourse
@@ -174,7 +171,7 @@ func TestUpsertCustomCourse(t *testing.T) {
 			expectErr: "assert.AnError",
 		},
 		{
-			name:       "UpsertCustomCourseExistingReturnSameID",
+			name:       "UpsertCustomCourseDuplicateReturnExistingID",
 			item:       baseItem,
 			existingID: "existing-uuid",
 			expectID:   "existing-uuid",
@@ -235,13 +232,6 @@ func TestUpsertCustomCourse(t *testing.T) {
 			createErr: assert.AnError,
 			expectErr: "assert.AnError",
 		},
-		{
-			name:       "UpsertCustomCourseCreateConflictReturnExistingID",
-			item:       baseItem,
-			createErr:  assert.AnError,
-			conflictID: "existing-uuid",
-			expectID:   "existing-uuid",
-		},
 	}
 
 	defer mockey.UnPatchAll()
@@ -255,21 +245,22 @@ func TestUpsertCustomCourse(t *testing.T) {
 
 			req := &course.UpsertCustomCourseRequest{Term: mockTerm, Course: tc.item}
 			var created *dbmodel.UserCustomCourse
-			var queryCount int
 
-			mockey.Mock((*dbcourse.DBCourse).GetCustomCourseIDByContent).To(
-				func(_ context.Context, _ string, _ string, _ string, _ string, _ string, _ int, _ int, _ int, _ int, _ int, _ bool, _ bool) (string, error) {
-					queryCount++
-					if queryCount == 1 {
-						return tc.existingID, tc.existingErr
-					}
-					return tc.conflictID, tc.conflictErr
-				},
-			).Build()
 			mockey.Mock((*dbcourse.DBCourse).CreateCustomCourse).To(
 				func(_ context.Context, course *dbmodel.UserCustomCourse) error {
 					created = course
 					return tc.createErr
+				},
+			).Build()
+			mockey.Mock((*dbcourse.DBCourse).GetCustomCourseIDByContent).To(
+				func(_ context.Context, _ string, _ string, _ string, _ string, _ string, _ int, _ int, _ int, _ int, _ int, _ bool, _ bool) (string, error) {
+					if tc.existingID != "" {
+						return tc.existingID, tc.existingErr
+					}
+					if created != nil {
+						return created.CourseId, tc.existingErr
+					}
+					return "", tc.existingErr
 				},
 			).Build()
 			if tc.item.Id != nil && *tc.item.Id != "" {
@@ -304,24 +295,6 @@ func TestUpsertCustomCourse(t *testing.T) {
 }
 
 func TestUpdateCustomCourse(t *testing.T) {
-	oldCourse := &dbmodel.UserCustomCourse{
-		StuId:      mockStuID,
-		Term:       mockTerm,
-		CourseId:   mockCourseID,
-		Name:       "自习",
-		Teacher:    "旧老师",
-		Location:   "旧地点",
-		StartClass: 1,
-		EndClass:   2,
-		StartWeek:  1,
-		EndWeek:    16,
-		Weekday:    1,
-		IsSingle:   false,
-		IsDouble:   true,
-		Color:      "#111111",
-		Remark:     "旧备注",
-	}
-
 	overrideItem := &course.CustomCourseItem{
 		Name:       "自习（新）",
 		Teacher:    new("新老师"),
@@ -350,8 +323,6 @@ func TestUpdateCustomCourse(t *testing.T) {
 	type testCase struct {
 		name           string
 		item           *course.CustomCourseItem
-		mockOld        *dbmodel.UserCustomCourse
-		mockGetErr     error
 		mockUpdateRows int64
 		mockUpdateErr  error
 		expectErr      string
@@ -360,21 +331,8 @@ func TestUpdateCustomCourse(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			name:       "UpdateCustomCourseNotFound",
-			item:       overrideItem,
-			mockGetErr: gorm.ErrRecordNotFound,
-			expectErr:  "自定义课程不存在",
-		},
-		{
-			name:       "UpdateCustomCourseGetDBError",
-			item:       overrideItem,
-			mockGetErr: assert.AnError,
-			expectErr:  "assert.AnError",
-		},
-		{
-			name:           "UpdateCustomCourseOverrideAllFields",
+			name:           "UpdateCustomCourseSuccess",
 			item:           overrideItem,
-			mockOld:        oldCourse,
 			mockUpdateRows: 1,
 			expectUpdates: map[string]interface{}{
 				"name":        "自习（新）",
@@ -392,13 +350,12 @@ func TestUpdateCustomCourse(t *testing.T) {
 			},
 		},
 		{
-			name:           "UpdateCustomCourseKeepOldValueWhenNil",
+			name:           "UpdateCustomCourseNilFieldsUseDefault",
 			item:           partialItem,
-			mockOld:        oldCourse,
 			mockUpdateRows: 1,
 			expectUpdates: map[string]interface{}{
 				"name":        "自习（部分）",
-				"teacher":     "旧老师",
+				"teacher":     "",
 				"location":    "图书馆",
 				"start_class": 1,
 				"end_class":   2,
@@ -407,21 +364,19 @@ func TestUpdateCustomCourse(t *testing.T) {
 				"weekday":     1,
 				"is_single":   false,
 				"is_double":   false,
-				"color":       "#111111",
-				"remark":      "旧备注",
+				"color":       "#FF5733",
+				"remark":      "",
 			},
 		},
 		{
-			name:           "UpdateCustomCourseRowsZero",
+			name:           "UpdateCustomCourseNotFound",
 			item:           overrideItem,
-			mockOld:        oldCourse,
 			mockUpdateRows: 0,
 			expectErr:      "自定义课程不存在",
 		},
 		{
 			name:           "UpdateCustomCourseUpdateDBError",
 			item:           overrideItem,
-			mockOld:        oldCourse,
 			mockUpdateRows: 0,
 			mockUpdateErr:  assert.AnError,
 			expectErr:      "assert.AnError",
@@ -436,8 +391,6 @@ func TestUpdateCustomCourse(t *testing.T) {
 				DBClient:    new(db.Database),
 				CacheClient: new(cache.Cache),
 			}
-
-			mockey.Mock((*dbcourse.DBCourse).GetCustomCourseByID).Return(tc.mockOld, tc.mockGetErr).Build()
 
 			var captured map[string]interface{}
 			mockey.Mock((*dbcourse.DBCourse).UpdateCustomCourse).To(

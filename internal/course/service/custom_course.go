@@ -18,10 +18,8 @@ package service
 
 import (
 	"context"
-	"errors"
 
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 
 	"github.com/west2-online/fzuhelper-server/internal/course/pack"
 	"github.com/west2-online/fzuhelper-server/kitex_gen/course"
@@ -43,14 +41,6 @@ func (s *CourseService) UpsertCustomCourse(ctx context.Context, stuID string, re
 		return s.updateCustomCourse(ctx, stuID, req.Term, *item.Id, item)
 	}
 
-	existingID, err := s.getExistingCustomCourseID(ctx, stuID, req.Term, item)
-	if err != nil {
-		return "", err
-	}
-	if existingID != "" {
-		return existingID, nil
-	}
-
 	courseID := uuid.New().String()
 	customCourse := &model.UserCustomCourse{
 		StuId:      stuID,
@@ -70,13 +60,13 @@ func (s *CourseService) UpsertCustomCourse(ctx context.Context, stuID string, re
 		Remark:     getStringValue(item.Remark),
 	}
 	if err := s.db.Course.CreateCustomCourse(ctx, customCourse); err != nil {
-		existingID, findErr := s.getExistingCustomCourseID(ctx, stuID, req.Term, item)
-		if findErr == nil && existingID != "" {
-			return existingID, nil
-		}
 		return "", err
 	}
-	return courseID, nil
+	existingID, err := s.getExistingCustomCourseID(ctx, stuID, req.Term, item)
+	if err != nil {
+		return "", err
+	}
+	return existingID, nil
 }
 
 func (s *CourseService) getExistingCustomCourseID(ctx context.Context, stuID, term string, item *course.CustomCourseItem) (string, error) {
@@ -92,42 +82,19 @@ func (s *CourseService) updateCustomCourse(
 	stuID, term, courseID string,
 	item *course.CustomCourseItem,
 ) (string, error) {
-	old, err := s.db.Course.GetCustomCourseByID(ctx, stuID, term, courseID)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return "", errno.CustomCourseNotFoundError
-		}
-		return "", err
-	}
-
-	teacher := old.Teacher
-	if item.Teacher != nil {
-		teacher = *item.Teacher
-	}
-	single := item.Single
-	double := item.Double_
-	color := old.Color
-	if item.Color != nil {
-		color = *item.Color
-	}
-	remark := old.Remark
-	if item.Remark != nil {
-		remark = *item.Remark
-	}
-
 	rows, err := s.db.Course.UpdateCustomCourse(ctx, stuID, term, courseID, map[string]interface{}{
 		"name":        item.Name,
-		"teacher":     teacher,
+		"teacher":     getStringValue(item.Teacher),
 		"location":    item.Location,
 		"start_class": int(item.StartClass),
 		"end_class":   int(item.EndClass),
 		"start_week":  int(item.StartWeek),
 		"end_week":    int(item.EndWeek),
 		"weekday":     int(item.Weekday),
-		"is_single":   single,
-		"is_double":   double,
-		"color":       color,
-		"remark":      remark,
+		"is_single":   item.Single,
+		"is_double":   item.Double_,
+		"color":       getStringValueWithDefault(item.Color, "#FF5733"),
+		"remark":      getStringValue(item.Remark),
 	})
 	if err != nil {
 		return "", err
