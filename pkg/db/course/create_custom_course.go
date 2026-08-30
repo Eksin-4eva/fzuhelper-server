@@ -18,6 +18,9 @@ package course
 
 import (
 	"context"
+	"errors"
+
+	"gorm.io/gorm"
 
 	"github.com/west2-online/fzuhelper-server/pkg/db/model"
 )
@@ -25,4 +28,26 @@ import (
 // CreateCustomCourse 创建自定义课程
 func (c *DBCourse) CreateCustomCourse(ctx context.Context, course *model.UserCustomCourse) error {
 	return c.client.WithContext(ctx).Create(course).Error
+}
+
+// GetCustomCourseIDByContent 查询同一用户同一学期下内容完全一致的活跃自定义课程，返回其 course_id；不存在时返回空字符串
+func (c *DBCourse) GetCustomCourseIDByContent(ctx context.Context, stuId, term string,
+	name, teacher, location string, startClass, endClass, startWeek, endWeek, weekday int,
+	isSingle, isDouble bool,
+) (string, error) {
+	var existing model.UserCustomCourse
+	err := c.client.WithContext(ctx).Model(&model.UserCustomCourse{}).
+		Select("course_id").
+		Where("stu_id = ? AND term = ? AND active_flag = 1", stuId, term).
+		Where("name = ? AND teacher = ? AND location = ? AND start_class = ? AND end_class = ? AND "+
+			"start_week = ? AND end_week = ? AND weekday = ? AND is_single = ? AND is_double = ?",
+			name, teacher, location, startClass, endClass, startWeek, endWeek, weekday, isSingle, isDouble).
+		First(&existing).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return existing.CourseId, nil
 }

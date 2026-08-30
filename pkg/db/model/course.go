@@ -70,24 +70,25 @@ type AutoAdjustCourse struct {
 }
 
 type UserCustomCourse struct {
-	StuId      string `gorm:"index:idx_stu"`
-	Term       string `gorm:"index:idx_term"`
-	CourseId   string `gorm:"primaryKey"`
-	Name       string `gorm:"uniqueIndex:uk_custom_course_content"`
-	Teacher    string `gorm:"uniqueIndex:uk_custom_course_content"`
-	Location   string `gorm:"uniqueIndex:uk_custom_course_content"`
-	StartClass int    `gorm:"uniqueIndex:uk_custom_course_content"`
-	EndClass   int    `gorm:"uniqueIndex:uk_custom_course_content"`
-	StartWeek  int    `gorm:"uniqueIndex:uk_custom_course_content"`
-	EndWeek    int    `gorm:"uniqueIndex:uk_custom_course_content"`
-	Weekday    int    `gorm:"uniqueIndex:uk_custom_course_content"`
-	IsSingle   bool   `gorm:"uniqueIndex:uk_custom_course_content"`
-	IsDouble   bool   `gorm:"uniqueIndex:uk_custom_course_content"`
+	StuId      string
+	Term       string
+	CourseId   string
+	Name       string
+	Teacher    string
+	Location   string
+	StartClass int
+	EndClass   int
+	StartWeek  int
+	EndWeek    int
+	Weekday    int
+	IsSingle   bool
+	IsDouble   bool
 	Color      string
 	Remark     string
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
-	DeletedAt  gorm.DeletedAt `gorm:"index:idx_deleted" sql:"index"`
+	DeletedAt  gorm.DeletedAt
+	ActiveFlag *int8 `gorm:"column:active_flag;<-:false"`
 }
 
 // TableName 指定表名

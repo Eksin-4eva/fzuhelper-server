@@ -202,7 +202,7 @@ func UpdateAdjustCourse(ctx context.Context, c *app.RequestContext) {
 }
 
 // UpsertCustomCourse 新增或更新自定义课程
-// @router /api/v1/course/custom [POST]
+// @router /api/v1/course/custom [PUT]
 func UpsertCustomCourse(ctx context.Context, c *app.RequestContext) {
 	var req api.UpsertCustomCourseRequest
 	var err error

@@ -150,8 +150,13 @@ func TestUpsertCustomCourse(t *testing.T) {
 		item          *course.CustomCourseItem
 		updateID      string
 		updateErr     error
+		existingID    string
+		existingErr   error
 		createErr     error
+		conflictID    string
+		conflictErr   error
 		expectErr     string
+		expectID      string
 		expectCreated *dbmodel.UserCustomCourse
 	}
 
@@ -160,12 +165,25 @@ func TestUpsertCustomCourse(t *testing.T) {
 			name:     "UpsertCustomCourseUpdateSuccess",
 			item:     itemWithID,
 			updateID: mockCourseID,
+			expectID: mockCourseID,
 		},
 		{
 			name:      "UpsertCustomCourseUpdateError",
 			item:      itemWithID,
 			updateErr: assert.AnError,
 			expectErr: "assert.AnError",
+		},
+		{
+			name:       "UpsertCustomCourseExistingReturnSameID",
+			item:       baseItem,
+			existingID: "existing-uuid",
+			expectID:   "existing-uuid",
+		},
+		{
+			name:        "UpsertCustomCourseQueryError",
+			item:        baseItem,
+			existingErr: assert.AnError,
+			expectErr:   "assert.AnError",
 		},
 		{
 			name: "UpsertCustomCourseCreateSuccess",
@@ -217,6 +235,13 @@ func TestUpsertCustomCourse(t *testing.T) {
 			createErr: assert.AnError,
 			expectErr: "assert.AnError",
 		},
+		{
+			name:       "UpsertCustomCourseCreateConflictReturnExistingID",
+			item:       baseItem,
+			createErr:  assert.AnError,
+			conflictID: "existing-uuid",
+			expectID:   "existing-uuid",
+		},
 	}
 
 	defer mockey.UnPatchAll()
@@ -230,16 +255,25 @@ func TestUpsertCustomCourse(t *testing.T) {
 
 			req := &course.UpsertCustomCourseRequest{Term: mockTerm, Course: tc.item}
 			var created *dbmodel.UserCustomCourse
+			var queryCount int
 
+			mockey.Mock((*dbcourse.DBCourse).GetCustomCourseIDByContent).To(
+				func(_ context.Context, _ string, _ string, _ string, _ string, _ string, _ int, _ int, _ int, _ int, _ int, _ bool, _ bool) (string, error) {
+					queryCount++
+					if queryCount == 1 {
+						return tc.existingID, tc.existingErr
+					}
+					return tc.conflictID, tc.conflictErr
+				},
+			).Build()
+			mockey.Mock((*dbcourse.DBCourse).CreateCustomCourse).To(
+				func(_ context.Context, course *dbmodel.UserCustomCourse) error {
+					created = course
+					return tc.createErr
+				},
+			).Build()
 			if tc.item.Id != nil && *tc.item.Id != "" {
 				mockey.Mock((*CourseService).updateCustomCourse).Return(tc.updateID, tc.updateErr).Build()
-			} else {
-				mockey.Mock((*dbcourse.DBCourse).CreateCustomCourse).To(
-					func(_ context.Context, course *dbmodel.UserCustomCourse) error {
-						created = course
-						return tc.createErr
-					},
-				).Build()
 			}
 
 			courseService := NewCourseService(context.Background(), mockClientSet, new(taskqueue.BaseTaskQueue))
@@ -252,8 +286,11 @@ func TestUpsertCustomCourse(t *testing.T) {
 			assert.NoError(t, err)
 
 			if tc.item.Id != nil && *tc.item.Id != "" {
-				assert.Equal(t, tc.updateID, res)
-				assert.Nil(t, created)
+				assert.Equal(t, tc.expectID, res)
+				return
+			}
+			if tc.expectID != "" {
+				assert.Equal(t, tc.expectID, res)
 				return
 			}
 			assert.NotEmpty(t, res)

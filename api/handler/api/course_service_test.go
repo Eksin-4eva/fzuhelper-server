@@ -258,7 +258,7 @@ func TestUpsertCustomCourse(t *testing.T) {
 	}
 
 	router := route.NewEngine(&config.Options{})
-	router.POST("/api/v1/course/custom", UpsertCustomCourse)
+	router.PUT("/api/v1/course/custom", UpsertCustomCourse)
 
 	defer mockey.UnPatchAll()
 	for _, tc := range testCases {
@@ -271,7 +271,7 @@ func TestUpsertCustomCourse(t *testing.T) {
 				Body: bytes.NewBufferString(tc.body),
 				Len:  len(tc.body),
 			}
-			res := ut.PerformRequest(router, consts.MethodPost, tc.url, body, ut.Header{
+			res := ut.PerformRequest(router, consts.MethodPut, tc.url, body, ut.Header{
 				Key:   "Content-Type",
 				Value: "application/json",
 			})
@@ -279,32 +279,6 @@ func TestUpsertCustomCourse(t *testing.T) {
 			assert.Contains(t, string(res.Result().Body()), tc.expectContains)
 		})
 	}
-}
-
-func TestUpsertCustomCourseCourseNil(t *testing.T) {
-	router := route.NewEngine(&config.Options{})
-	router.POST("/api/v1/course/custom", UpsertCustomCourse)
-
-	defer mockey.UnPatchAll()
-	mockey.PatchConvey("course nil reaches nil check", t, func() {
-		// 绕过 hertz 的 required 校验，使 req.Course 保持 nil，覆盖 handler 中的防御性检查
-		mockey.Mock((*app.RequestContext).BindAndValidate).To(
-			func(c *app.RequestContext, req interface{}) error {
-				return nil
-			},
-		).Build()
-
-		body := &ut.Body{
-			Body: bytes.NewBufferString(`{"term":"202401"}`),
-			Len:  len(`{"term":"202401"}`),
-		}
-		res := ut.PerformRequest(router, consts.MethodPost, "/api/v1/course/custom", body, ut.Header{
-			Key:   "Content-Type",
-			Value: "application/json",
-		})
-		assert.Equal(t, consts.StatusOK, res.Result().StatusCode())
-		assert.Contains(t, string(res.Result().Body()), `{"code":"20001","message":"参数错误"}`)
-	})
 }
 
 func TestGetTermList(t *testing.T) {

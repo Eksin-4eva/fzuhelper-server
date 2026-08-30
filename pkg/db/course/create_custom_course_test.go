@@ -93,3 +93,78 @@ func TestDBCourse_CreateCustomCourse(t *testing.T) {
 		})
 	}
 }
+
+func TestDBCourse_GetCustomCourseIDByContent(t *testing.T) {
+	const existingCourseId = "existing-uuid-123"
+
+	type testCase struct {
+		name           string
+		mockFirstError error
+		expectingError bool
+		expectedID     string
+	}
+
+	testCases := []testCase{
+		{
+			name:       "GetCustomCourseIDByContent_Found",
+			expectedID: existingCourseId,
+		},
+		{
+			name:           "GetCustomCourseIDByContent_NotFound",
+			mockFirstError: gorm.ErrRecordNotFound,
+		},
+		{
+			name:           "GetCustomCourseIDByContent_DBError",
+			mockFirstError: fmt.Errorf("db error"),
+			expectingError: true,
+		},
+	}
+
+	defer mockey.UnPatchAll()
+	for _, tc := range testCases {
+		mockey.PatchConvey(tc.name, t, func() {
+			mockGormDB := new(gorm.DB)
+			mockSnowflake := new(utils.Snowflake)
+			mockDBCourse := NewDBCourse(mockGormDB, mockSnowflake)
+
+			mockey.Mock((*gorm.DB).WithContext).To(func(ctx context.Context) *gorm.DB {
+				return mockGormDB
+			}).Build()
+			mockey.Mock((*gorm.DB).Model).To(func(value interface{}) *gorm.DB {
+				return mockGormDB
+			}).Build()
+			mockey.Mock((*gorm.DB).Select).To(func(query interface{}, args ...interface{}) *gorm.DB {
+				return mockGormDB
+			}).Build()
+			mockey.Mock((*gorm.DB).Where).To(func(query interface{}, args ...interface{}) *gorm.DB {
+				return mockGormDB
+			}).Build()
+			mockey.Mock((*gorm.DB).First).To(func(dest interface{}, conds ...interface{}) *gorm.DB {
+				if tc.mockFirstError != nil {
+					mockGormDB.Error = tc.mockFirstError
+					return mockGormDB
+				}
+				if v, ok := dest.(*model.UserCustomCourse); ok {
+					v.CourseId = existingCourseId
+				}
+				return mockGormDB
+			}).Build()
+
+			result, err := mockDBCourse.GetCustomCourseIDByContent(
+				context.Background(),
+				"222200311", "202401",
+				"自习", "张老师", "图书馆",
+				1, 2, 1, 16, 1,
+				false, false,
+			)
+
+			if tc.expectingError {
+				assert.Error(t, err)
+				assert.Empty(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expectedID, result)
+			}
+		})
+	}
+}

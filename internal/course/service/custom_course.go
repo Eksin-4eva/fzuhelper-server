@@ -43,6 +43,14 @@ func (s *CourseService) UpsertCustomCourse(ctx context.Context, stuID string, re
 		return s.updateCustomCourse(ctx, stuID, req.Term, *item.Id, item)
 	}
 
+	existingID, err := s.getExistingCustomCourseID(ctx, stuID, req.Term, item)
+	if err != nil {
+		return "", err
+	}
+	if existingID != "" {
+		return existingID, nil
+	}
+
 	courseID := uuid.New().String()
 	customCourse := &model.UserCustomCourse{
 		StuId:      stuID,
@@ -62,9 +70,21 @@ func (s *CourseService) UpsertCustomCourse(ctx context.Context, stuID string, re
 		Remark:     getStringValue(item.Remark),
 	}
 	if err := s.db.Course.CreateCustomCourse(ctx, customCourse); err != nil {
+		existingID, findErr := s.getExistingCustomCourseID(ctx, stuID, req.Term, item)
+		if findErr == nil && existingID != "" {
+			return existingID, nil
+		}
 		return "", err
 	}
 	return courseID, nil
+}
+
+func (s *CourseService) getExistingCustomCourseID(ctx context.Context, stuID, term string, item *course.CustomCourseItem) (string, error) {
+	return s.db.Course.GetCustomCourseIDByContent(ctx, stuID, term,
+		item.Name, getStringValue(item.Teacher), item.Location,
+		int(item.StartClass), int(item.EndClass),
+		int(item.StartWeek), int(item.EndWeek),
+		int(item.Weekday), item.Single, item.Double_)
 }
 
 func (s *CourseService) updateCustomCourse(

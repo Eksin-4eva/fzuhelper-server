@@ -312,7 +312,7 @@ service CourseService {
     // 更新自动调课信息
     UpdateAdjustCourseResponse UpdateAdjustCourse(1: UpdateAdjustCourseRequest req)(api.put="/api/v1/course/adjust/")
     // 新增或更新自定义课程
-    UpsertCustomCourseResponse UpsertCustomCourse(1: UpsertCustomCourseRequest req)(api.post="/api/v1/course/custom")
+    UpsertCustomCourseResponse UpsertCustomCourse(1: UpsertCustomCourseRequest req)(api.put="/api/v1/course/custom")
     // 删除自定义课程
     DeleteCustomCourseResponse DeleteCustomCourse(1: DeleteCustomCourseRequest req)(api.delete="/api/v1/course/custom")
 }

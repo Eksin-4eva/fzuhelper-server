@@ -56,7 +56,7 @@ func Register(r *server.Hertz) {
 			{
 				_course := _v1.Group("/course", _courseMw()...)
 				_course.DELETE("/custom", append(_deletecustomcourseMw(), api.DeleteCustomCourse)...)
-				_course.POST("/custom", append(_upsertcustomcourseMw(), api.UpsertCustomCourse)...)
+				_course.PUT("/custom", append(_upsertcustomcourseMw(), api.UpsertCustomCourse)...)
 				_course.GET("/date", append(_getlocatedateMw(), api.GetLocateDate)...)
 				{
 					_adjust := _course.Group("/adjust", _adjustMw()...)
