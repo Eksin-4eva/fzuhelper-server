@@ -70,9 +70,9 @@ type AutoAdjustCourse struct {
 }
 
 type UserCustomCourse struct {
+	Id         int64
 	StuId      string
 	Term       string
-	CourseId   string
 	Name       string
 	Teacher    string
 	Location   string

@@ -17,6 +17,8 @@ limitations under the License.
 package pack
 
 import (
+	"strconv"
+
 	courseKitex "github.com/west2-online/fzuhelper-server/kitex_gen/course"
 	dbModel "github.com/west2-online/fzuhelper-server/pkg/db/model"
 )
@@ -25,8 +27,9 @@ import (
 func BuildCustomCourseItems(courses []*dbModel.UserCustomCourse) []*courseKitex.CustomCourseItem {
 	result := make([]*courseKitex.CustomCourseItem, 0, len(courses))
 	for _, c := range courses {
+		id := strconv.FormatInt(c.Id, 10)
 		item := &courseKitex.CustomCourseItem{
-			Id:         &c.CourseId,
+			Id:         &id,
 			Name:       c.Name,
 			Location:   c.Location,
 			StartClass: int32(c.StartClass),

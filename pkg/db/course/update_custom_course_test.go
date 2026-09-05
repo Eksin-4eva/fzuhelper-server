@@ -35,7 +35,7 @@ func TestDBCourse_UpdateCustomCourse(t *testing.T) {
 		mockRowsAffected int64
 		stuId            string
 		term             string
-		courseId         string
+		id               int64
 		updates          map[string]interface{}
 		expectingError   bool
 		expectedRows     int64
@@ -48,7 +48,7 @@ func TestDBCourse_UpdateCustomCourse(t *testing.T) {
 			mockRowsAffected: 1,
 			stuId:            "222200311",
 			term:             "202401",
-			courseId:         "uuid-1",
+			id:               1,
 			updates: map[string]interface{}{
 				"name":        "自习（更新）",
 				"location":    "图书馆3楼",
@@ -64,7 +64,7 @@ func TestDBCourse_UpdateCustomCourse(t *testing.T) {
 			mockRowsAffected: 0,
 			stuId:            "222200311",
 			term:             "202401",
-			courseId:         "not-exist",
+			id:               999,
 			updates: map[string]interface{}{
 				"name": "自习（更新）",
 			},
@@ -77,7 +77,7 @@ func TestDBCourse_UpdateCustomCourse(t *testing.T) {
 			mockRowsAffected: 0,
 			stuId:            "222200311",
 			term:             "202401",
-			courseId:         "uuid-1",
+			id:               1,
 			updates: map[string]interface{}{
 				"name": "自习（更新）",
 			},
@@ -111,7 +111,7 @@ func TestDBCourse_UpdateCustomCourse(t *testing.T) {
 				return mockGormDB
 			}).Build()
 
-			rows, err := mockDBCourse.UpdateCustomCourse(context.Background(), tc.stuId, tc.term, tc.courseId, tc.updates)
+			rows, err := mockDBCourse.UpdateCustomCourse(context.Background(), tc.stuId, tc.term, tc.id, tc.updates)
 
 			if tc.expectingError {
 				assert.Error(t, err)

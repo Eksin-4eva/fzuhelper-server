@@ -39,9 +39,9 @@ func TestDBCourse_CreateCustomCourse(t *testing.T) {
 	}
 
 	inputCourse := &model.UserCustomCourse{
+		Id:         1,
 		StuId:      "222200311",
 		Term:       "202401",
-		CourseId:   "uuid-1",
 		Name:       "自习",
 		Location:   "图书馆",
 		StartClass: 1,
@@ -99,13 +99,13 @@ func TestDBCourse_CreateCustomCourse(t *testing.T) {
 }
 
 func TestDBCourse_GetCustomCourseIDByContent(t *testing.T) {
-	const existingCourseId = "existing-uuid-123"
+	const existingCourseId int64 = 123
 
 	type testCase struct {
 		name           string
 		mockFirstError error
 		expectingError bool
-		expectedID     string
+		expectedID     int64
 	}
 
 	testCases := []testCase{
@@ -149,7 +149,7 @@ func TestDBCourse_GetCustomCourseIDByContent(t *testing.T) {
 					return mockGormDB
 				}
 				if v, ok := dest.(*model.UserCustomCourse); ok {
-					v.CourseId = existingCourseId
+					v.Id = existingCourseId
 				}
 				return mockGormDB
 			}).Build()
@@ -164,7 +164,7 @@ func TestDBCourse_GetCustomCourseIDByContent(t *testing.T) {
 
 			if tc.expectingError {
 				assert.Error(t, err)
-				assert.Empty(t, result)
+				assert.Zero(t, result)
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.expectedID, result)

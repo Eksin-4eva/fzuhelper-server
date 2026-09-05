@@ -23,9 +23,9 @@ import (
 )
 
 // DeleteCustomCourse 删除自定义课程（软删除），返回受影响的行数
-func (c *DBCourse) DeleteCustomCourse(ctx context.Context, stuId, term, courseId string) (int64, error) {
+func (c *DBCourse) DeleteCustomCourse(ctx context.Context, stuId, term string, id int64) (int64, error) {
 	result := c.client.WithContext(ctx).
-		Where("stu_id = ? AND term = ? AND course_id = ?", stuId, term, courseId).
+		Where("stu_id = ? AND term = ? AND id = ?", stuId, term, id).
 		Delete(&model.UserCustomCourse{})
 	return result.RowsAffected, result.Error
 }

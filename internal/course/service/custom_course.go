@@ -18,8 +18,7 @@ package service
 
 import (
 	"context"
-
-	"github.com/google/uuid"
+	"strconv"
 
 	"github.com/west2-online/fzuhelper-server/internal/course/pack"
 	"github.com/west2-online/fzuhelper-server/kitex_gen/course"
@@ -41,11 +40,14 @@ func (s *CourseService) UpsertCustomCourse(ctx context.Context, stuID string, re
 		return s.updateCustomCourse(ctx, stuID, req.Term, *item.Id, item)
 	}
 
-	courseID := uuid.New().String()
+	id, err := s.sf.NextVal()
+	if err != nil {
+		return "", err
+	}
 	customCourse := &model.UserCustomCourse{
+		Id:         id,
 		StuId:      stuID,
 		Term:       req.Term,
-		CourseId:   courseID,
 		Name:       item.Name,
 		Teacher:    getStringValue(item.Teacher),
 		Location:   item.Location,
@@ -66,10 +68,10 @@ func (s *CourseService) UpsertCustomCourse(ctx context.Context, stuID string, re
 	if err != nil {
 		return "", err
 	}
-	return existingID, nil
+	return strconv.FormatInt(existingID, 10), nil
 }
 
-func (s *CourseService) getExistingCustomCourseID(ctx context.Context, stuID, term string, item *course.CustomCourseItem) (string, error) {
+func (s *CourseService) getExistingCustomCourseID(ctx context.Context, stuID, term string, item *course.CustomCourseItem) (int64, error) {
 	return s.db.Course.GetCustomCourseIDByContent(ctx, stuID, term,
 		item.Name, getStringValue(item.Teacher), item.Location,
 		int(item.StartClass), int(item.EndClass),
@@ -82,7 +84,11 @@ func (s *CourseService) updateCustomCourse(
 	stuID, term, courseID string,
 	item *course.CustomCourseItem,
 ) (string, error) {
-	rows, err := s.db.Course.UpdateCustomCourse(ctx, stuID, term, courseID, map[string]interface{}{
+	id, err := strconv.ParseInt(courseID, 10, 64)
+	if err != nil {
+		return "", errno.CustomCourseNotFoundError
+	}
+	rows, err := s.db.Course.UpdateCustomCourse(ctx, stuID, term, id, map[string]interface{}{
 		"name":        item.Name,
 		"teacher":     getStringValue(item.Teacher),
 		"location":    item.Location,
@@ -106,7 +112,11 @@ func (s *CourseService) updateCustomCourse(
 }
 
 func (s *CourseService) DeleteCustomCourse(ctx context.Context, stuID string, req *course.DeleteCustomCourseRequest) error {
-	rows, err := s.db.Course.DeleteCustomCourse(ctx, stuID, req.Term, req.CourseId)
+	id, err := strconv.ParseInt(req.CourseId, 10, 64)
+	if err != nil {
+		return errno.CustomCourseNotFoundError
+	}
+	rows, err := s.db.Course.DeleteCustomCourse(ctx, stuID, req.Term, id)
 	if err != nil {
 		return errno.InternalServiceError.WithError(err)
 	}

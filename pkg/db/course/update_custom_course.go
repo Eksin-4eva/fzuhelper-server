@@ -23,10 +23,10 @@ import (
 )
 
 // UpdateCustomCourse 更新自定义课程，返回受影响的行数
-func (c *DBCourse) UpdateCustomCourse(ctx context.Context, stuId, term, courseId string, updates map[string]interface{}) (int64, error) {
+func (c *DBCourse) UpdateCustomCourse(ctx context.Context, stuId, term string, id int64, updates map[string]interface{}) (int64, error) {
 	result := c.client.WithContext(ctx).
 		Model(&model.UserCustomCourse{}).
-		Where("stu_id = ? AND term = ? AND course_id = ?", stuId, term, courseId).
+		Where("stu_id = ? AND term = ? AND id = ? AND active_flag = 1", stuId, term, id).
 		Updates(updates)
 	return result.RowsAffected, result.Error
 }

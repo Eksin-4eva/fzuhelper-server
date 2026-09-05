@@ -18,6 +18,7 @@ package service
 
 import (
 	"context"
+	"strconv"
 	"testing"
 
 	"github.com/bytedance/mockey"
@@ -35,17 +36,18 @@ import (
 )
 
 const (
-	mockStuID    = "102301517"
-	mockTerm     = "202401"
-	mockCourseID = "course-uuid-1"
+	mockStuID       = "102301517"
+	mockTerm        = "202401"
+	mockCourseID    = "9000000001"
+	mockCourseIDInt = 9000000001
 )
 
 func TestGetCustomCourses(t *testing.T) {
 	mockCourses := []*dbmodel.UserCustomCourse{
 		{
+			Id:         mockCourseIDInt,
 			StuId:      mockStuID,
 			Term:       mockTerm,
-			CourseId:   mockCourseID,
 			Name:       "自习",
 			Teacher:    "张老师",
 			Location:   "图书馆3楼",
@@ -149,7 +151,7 @@ func TestUpsertCustomCourse(t *testing.T) {
 		item          *course.CustomCourseItem
 		updateID      string
 		updateErr     error
-		existingID    string
+		existingID    int64
 		existingErr   error
 		createErr     error
 		expectErr     string
@@ -173,8 +175,8 @@ func TestUpsertCustomCourse(t *testing.T) {
 		{
 			name:       "UpsertCustomCourseDuplicateReturnExistingID",
 			item:       baseItem,
-			existingID: "existing-uuid",
-			expectID:   "existing-uuid",
+			existingID: 123,
+			expectID:   "123",
 		},
 		{
 			name:        "UpsertCustomCourseQueryError",
@@ -253,14 +255,14 @@ func TestUpsertCustomCourse(t *testing.T) {
 				},
 			).Build()
 			mockey.Mock((*dbcourse.DBCourse).GetCustomCourseIDByContent).To(
-				func(_ context.Context, _ string, _ string, _ string, _ string, _ string, _ int, _ int, _ int, _ int, _ int, _ bool, _ bool) (string, error) {
-					if tc.existingID != "" {
+				func(_ context.Context, _ string, _ string, _ string, _ string, _ string, _ int, _ int, _ int, _ int, _ int, _ bool, _ bool) (int64, error) {
+					if tc.existingID != 0 {
 						return tc.existingID, tc.existingErr
 					}
 					if created != nil {
-						return created.CourseId, tc.existingErr
+						return created.Id, tc.existingErr
 					}
-					return "", tc.existingErr
+					return 0, tc.existingErr
 				},
 			).Build()
 			if tc.item.Id != nil && *tc.item.Id != "" {
@@ -286,9 +288,9 @@ func TestUpsertCustomCourse(t *testing.T) {
 			}
 			assert.NotEmpty(t, res)
 			assert.NotNil(t, created)
-			assert.Equal(t, res, created.CourseId)
+			assert.Equal(t, res, strconv.FormatInt(created.Id, 10))
 			createdForCompare := *created
-			createdForCompare.CourseId = ""
+			createdForCompare.Id = 0
 			assert.Equal(t, tc.expectCreated, &createdForCompare)
 		})
 	}
@@ -394,7 +396,7 @@ func TestUpdateCustomCourse(t *testing.T) {
 
 			var captured map[string]interface{}
 			mockey.Mock((*dbcourse.DBCourse).UpdateCustomCourse).To(
-				func(_ context.Context, _, _, _ string, updates map[string]interface{}) (int64, error) {
+				func(_ context.Context, _ string, _ string, _ int64, updates map[string]interface{}) (int64, error) {
 					captured = updates
 					return tc.mockUpdateRows, tc.mockUpdateErr
 				},
