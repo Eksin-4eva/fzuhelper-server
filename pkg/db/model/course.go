@@ -19,8 +19,9 @@ package model
 import (
 	"time"
 
-	"github.com/west2-online/fzuhelper-server/pkg/constants"
 	"gorm.io/gorm"
+
+	"github.com/west2-online/fzuhelper-server/pkg/constants"
 )
 
 type UserCourse struct {

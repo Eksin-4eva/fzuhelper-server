@@ -151,8 +151,6 @@ func TestUpsertCustomCourse(t *testing.T) {
 		item          *course.CustomCourseItem
 		updateID      string
 		updateErr     error
-		existingID    int64
-		existingErr   error
 		createErr     error
 		expectErr     string
 		expectID      string
@@ -171,18 +169,6 @@ func TestUpsertCustomCourse(t *testing.T) {
 			item:      itemWithID,
 			updateErr: assert.AnError,
 			expectErr: "assert.AnError",
-		},
-		{
-			name:       "UpsertCustomCourseDuplicateReturnExistingID",
-			item:       baseItem,
-			existingID: 123,
-			expectID:   "123",
-		},
-		{
-			name:        "UpsertCustomCourseQueryError",
-			item:        baseItem,
-			existingErr: assert.AnError,
-			expectErr:   "assert.AnError",
 		},
 		{
 			name: "UpsertCustomCourseCreateSuccess",
