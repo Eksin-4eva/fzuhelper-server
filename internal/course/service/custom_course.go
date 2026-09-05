@@ -25,14 +25,41 @@ import (
 	"github.com/west2-online/fzuhelper-server/kitex_gen/course"
 	"github.com/west2-online/fzuhelper-server/pkg/db/model"
 	"github.com/west2-online/fzuhelper-server/pkg/errno"
+	"github.com/west2-online/fzuhelper-server/pkg/taskqueue"
 )
 
 func (s *CourseService) GetCustomCourses(ctx context.Context, stuID, term string) ([]*course.CustomCourseItem, error) {
+	key := s.cache.Course.CustomCourseKey(stuID, term)
+	if s.cache.IsKeyExist(s.ctx, key) {
+		items, err := s.cache.Course.GetCustomCoursesCache(s.ctx, key)
+		if err != nil {
+			return nil, fmt.Errorf("CourseService.GetCustomCourses: get custom courses cache failed: %w", err)
+		}
+		return items, nil
+	}
+
 	courses, err := s.db.Course.GetCustomCourses(ctx, stuID, term)
 	if err != nil {
 		return nil, fmt.Errorf("CourseService.GetCustomCourses: get custom courses failed: %w", err)
 	}
-	return pack.BuildCustomCourseItems(courses), nil
+	items := pack.BuildCustomCourseItems(courses)
+	// async put custom courses to cache
+	s.taskQueue.Add(key, taskqueue.QueueTask{Execute: func() error {
+		return s.cache.Course.SetCustomCoursesCache(s.ctx, key, items)
+	}})
+	return items, nil
+}
+
+// refreshCustomCourseCache 在自定义课程变更后，从 db 重读全量回填缓存，与调课缓存刷新策略一致
+func (s *CourseService) refreshCustomCourseCache(stuID, term string) {
+	key := s.cache.Course.CustomCourseKey(stuID, term)
+	s.taskQueue.Add(key, taskqueue.QueueTask{Execute: func() error {
+		courses, err := s.db.Course.GetCustomCourses(s.ctx, stuID, term)
+		if err != nil {
+			return err
+		}
+		return s.cache.Course.SetCustomCoursesCache(s.ctx, key, pack.BuildCustomCourseItems(courses))
+	}})
 }
 
 func (s *CourseService) UpsertCustomCourse(ctx context.Context, stuID string, req *course.UpsertCustomCourseRequest) (string, error) {
@@ -65,6 +92,7 @@ func (s *CourseService) UpsertCustomCourse(ctx context.Context, stuID string, re
 	if err := s.db.Course.CreateCustomCourse(ctx, customCourse); err != nil {
 		return "", err
 	}
+	s.refreshCustomCourseCache(stuID, req.Term)
 	return strconv.FormatInt(customCourse.Id, 10), nil
 }
 
@@ -97,6 +125,7 @@ func (s *CourseService) updateCustomCourse(
 	if rows == 0 {
 		return "", errno.CustomCourseNotFoundError
 	}
+	s.refreshCustomCourseCache(stuID, term)
 	return courseID, nil
 }
 
@@ -112,6 +141,7 @@ func (s *CourseService) DeleteCustomCourse(ctx context.Context, stuID string, re
 	if rows == 0 {
 		return errno.CustomCourseNotFoundError
 	}
+	s.refreshCustomCourseCache(stuID, req.Term)
 	return nil
 }
 

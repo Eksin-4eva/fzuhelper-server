@@ -28,6 +28,7 @@ import (
 	"github.com/west2-online/fzuhelper-server/kitex_gen/course"
 	"github.com/west2-online/fzuhelper-server/pkg/base"
 	"github.com/west2-online/fzuhelper-server/pkg/cache"
+	courseCache "github.com/west2-online/fzuhelper-server/pkg/cache/course"
 	"github.com/west2-online/fzuhelper-server/pkg/db"
 	dbcourse "github.com/west2-online/fzuhelper-server/pkg/db/course"
 	dbmodel "github.com/west2-online/fzuhelper-server/pkg/db/model"
@@ -65,6 +66,8 @@ func TestGetCustomCourses(t *testing.T) {
 
 	type testCase struct {
 		name        string
+		cacheExists bool
+		cacheItems  []*course.CustomCourseItem
 		mockCourses []*dbmodel.UserCustomCourse
 		mockErr     error
 		expectErr   string
@@ -72,6 +75,12 @@ func TestGetCustomCourses(t *testing.T) {
 	}
 
 	testCases := []testCase{
+		{
+			name:        "GetCustomCoursesCacheHit",
+			cacheExists: true,
+			cacheItems:  []*course.CustomCourseItem{{Name: "缓存课程"}},
+			expectLen:   1,
+		},
 		{
 			name:        "GetCustomCoursesSuccess",
 			mockCourses: mockCourses,
@@ -97,7 +106,12 @@ func TestGetCustomCourses(t *testing.T) {
 				CacheClient: new(cache.Cache),
 			}
 
-			mockey.Mock((*dbcourse.DBCourse).GetCustomCourses).Return(tc.mockCourses, tc.mockErr).Build()
+			mockey.Mock((*cache.Cache).IsKeyExist).Return(tc.cacheExists).Build()
+			if tc.cacheExists {
+				mockey.Mock((*courseCache.CacheCourse).GetCustomCoursesCache).Return(tc.cacheItems, nil).Build()
+			} else {
+				mockey.Mock((*dbcourse.DBCourse).GetCustomCourses).Return(tc.mockCourses, tc.mockErr).Build()
+			}
 
 			courseService := NewCourseService(context.Background(), mockClientSet, new(taskqueue.BaseTaskQueue))
 			res, err := courseService.GetCustomCourses(context.Background(), mockStuID, mockTerm)
@@ -105,6 +119,9 @@ func TestGetCustomCourses(t *testing.T) {
 			if tc.expectErr != "" {
 				assert.ErrorContains(t, err, tc.expectErr)
 				assert.Nil(t, res)
+			} else if tc.cacheExists {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.cacheItems, res)
 			} else {
 				assert.NoError(t, err)
 				assert.Len(t, res, tc.expectLen)

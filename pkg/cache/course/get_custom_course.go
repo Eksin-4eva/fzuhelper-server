@@ -16,12 +16,23 @@ limitations under the License.
 
 package course
 
-import "fmt"
+import (
+	"context"
+	"fmt"
 
-func (c *CacheCourse) AutoAdjustCourseKey(term string) string {
-	return fmt.Sprintf("course:auto_adjust_course:%s", term)
-}
+	"github.com/bytedance/sonic"
 
-func (c *CacheCourse) CustomCourseKey(stuId, term string) string {
-	return fmt.Sprintf("course:custom:%s:%s", stuId, term)
+	"github.com/west2-online/fzuhelper-server/kitex_gen/course"
+)
+
+func (c *CacheCourse) GetCustomCoursesCache(ctx context.Context, key string) ([]*course.CustomCourseItem, error) {
+	items := make([]*course.CustomCourseItem, 0)
+	data, err := c.client.Get(ctx, key).Bytes()
+	if err != nil {
+		return nil, fmt.Errorf("dal.GetCustomCoursesCache: cache failed: %w", err)
+	}
+	if err = sonic.Unmarshal(data, &items); err != nil {
+		return nil, fmt.Errorf("dal.GetCustomCoursesCache: Unmarshal failed: %w", err)
+	}
+	return items, nil
 }
