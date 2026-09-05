@@ -18,6 +18,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/west2-online/fzuhelper-server/internal/course/pack"
@@ -29,7 +30,7 @@ import (
 func (s *CourseService) GetCustomCourses(ctx context.Context, stuID, term string) ([]*course.CustomCourseItem, error) {
 	courses, err := s.db.Course.GetCustomCourses(ctx, stuID, term)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("CourseService.GetCustomCourses: get custom courses failed: %w", err)
 	}
 	return pack.BuildCustomCourseItems(courses), nil
 }
