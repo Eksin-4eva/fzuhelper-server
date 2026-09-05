@@ -19,6 +19,7 @@ package model
 import (
 	"time"
 
+	"github.com/west2-online/fzuhelper-server/pkg/constants"
 	"gorm.io/gorm"
 )
 
@@ -94,5 +95,5 @@ type UserCustomCourse struct {
 
 // TableName 指定表名
 func (UserCustomCourse) TableName() string {
-	return "user_custom_courses"
+	return constants.UserCustomCourseTableName
 }
