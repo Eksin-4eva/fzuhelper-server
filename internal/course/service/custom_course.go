@@ -65,19 +65,7 @@ func (s *CourseService) UpsertCustomCourse(ctx context.Context, stuID string, re
 	if err := s.db.Course.CreateCustomCourse(ctx, customCourse); err != nil {
 		return "", err
 	}
-	existingID, err := s.getExistingCustomCourseID(ctx, stuID, req.Term, item)
-	if err != nil {
-		return "", err
-	}
-	return strconv.FormatInt(existingID, 10), nil
-}
-
-func (s *CourseService) getExistingCustomCourseID(ctx context.Context, stuID, term string, item *course.CustomCourseItem) (int64, error) {
-	return s.db.Course.GetCustomCourseIDByContent(ctx, stuID, term,
-		item.Name, getStringValue(item.Teacher), item.Location,
-		int(item.StartClass), int(item.EndClass),
-		int(item.StartWeek), int(item.EndWeek),
-		int(item.Weekday), item.Single, item.Double_)
+	return strconv.FormatInt(customCourse.Id, 10), nil
 }
 
 func (s *CourseService) updateCustomCourse(

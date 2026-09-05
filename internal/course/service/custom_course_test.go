@@ -254,17 +254,6 @@ func TestUpsertCustomCourse(t *testing.T) {
 					return tc.createErr
 				},
 			).Build()
-			mockey.Mock((*dbcourse.DBCourse).GetCustomCourseIDByContent).To(
-				func(_ context.Context, _ string, _ string, _ string, _ string, _ string, _ int, _ int, _ int, _ int, _ int, _ bool, _ bool) (int64, error) {
-					if tc.existingID != 0 {
-						return tc.existingID, tc.existingErr
-					}
-					if created != nil {
-						return created.Id, tc.existingErr
-					}
-					return 0, tc.existingErr
-				},
-			).Build()
 			if tc.item.Id != nil && *tc.item.Id != "" {
 				mockey.Mock((*CourseService).updateCustomCourse).Return(tc.updateID, tc.updateErr).Build()
 			}
