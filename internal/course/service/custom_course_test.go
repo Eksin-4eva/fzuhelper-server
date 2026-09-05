@@ -116,13 +116,14 @@ func TestGetCustomCourses(t *testing.T) {
 			courseService := NewCourseService(context.Background(), mockClientSet, new(taskqueue.BaseTaskQueue))
 			res, err := courseService.GetCustomCourses(context.Background(), mockStuID, mockTerm)
 
-			if tc.expectErr != "" {
+			switch {
+			case tc.expectErr != "":
 				assert.ErrorContains(t, err, tc.expectErr)
 				assert.Nil(t, res)
-			} else if tc.cacheExists {
+			case tc.cacheExists:
 				assert.NoError(t, err)
 				assert.Equal(t, tc.cacheItems, res)
-			} else {
+			default:
 				assert.NoError(t, err)
 				assert.Len(t, res, tc.expectLen)
 				assert.Equal(t, pack.BuildCustomCourseItems(tc.mockCourses), res)
