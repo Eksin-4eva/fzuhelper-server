@@ -211,7 +211,10 @@ func UpsertCustomCourse(ctx context.Context, c *app.RequestContext) {
 		pack.RespError(c, errno.ParamError.WithError(err))
 		return
 	}
-	if req.Course == nil {
+	if req.Course == nil ||
+		req.Course.StartClass < 1 || req.Course.EndClass < req.Course.StartClass ||
+		req.Course.StartWeek < 1 || req.Course.EndWeek < req.Course.StartWeek ||
+		req.Course.Weekday < 1 || req.Course.Weekday > 7 {
 		pack.RespError(c, errno.ParamError)
 		return
 	}
